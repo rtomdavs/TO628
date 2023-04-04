@@ -1,6 +1,6 @@
 ---
 title: "Bankrupt"
-author: "Qianyu Yang and Tom Davis"
+author: "Qianyu Yang, Tom Davis, Joshua Kim"
 date: "2023-04-04"
 output: html_document
 ---
