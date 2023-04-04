@@ -9,8 +9,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Project Proposal
+For our proposal we will be doing the following:
+- Using a bankruptcy data set 
+- Asking the question whether or not these banks will go bankrupt
+- Preliminary explorations are below
+- Link to repository: https://github.com/rtomdavs/TO628
+
 ```{r}
-bankruptcy <- read.csv("C:/Umich/2023 Winter/TO628/Group/bankruptcy.csv")
+bankruptcy <- read.csv("bankruptcy.csv")
 summary(bankruptcy)
 bankruptcy$Net.worth.Assets <- NULL
 bankruptcy$Current.Liability.to.Liability <- NULL
