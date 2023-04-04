@@ -1,6 +1,6 @@
 ---
 title: "Bankrupt"
-author: "Qianyu Yang, Tom Davis, Joshua Kim"
+author: "The Kumar Kids"
 date: "2023-04-04"
 output: html_document
 ---
