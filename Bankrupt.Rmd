@@ -1,8 +1,14 @@
 ---
-title: "Bankrupt"
+title: "Bankruptcy Prediction"
 author: "The Kumar Kids"
 date: "2023-04-04"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: spacelab
+    highlight: zenburn
 ---
 
 ```{r setup, include=FALSE}
@@ -11,27 +17,29 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Project Proposal
 For our proposal we will be doing the following:
+
 - Using a bankruptcy data set 
 - Asking the question whether or not these banks will go bankrupt
 - Preliminary explorations are below
 - Link to repository: https://github.com/rtomdavs/TO628
 
+# Data Cleaning
+
+## Loading Data and Removing Columns
 ```{r}
 bankruptcy <- read.csv("bankruptcy.csv")
-summary(bankruptcy)
 bankruptcy$Net.worth.Assets <- NULL
 bankruptcy$Current.Liability.to.Liability <- NULL
 bankruptcy$Current.Liability.to.Equity <- NULL
 bankruptcy$Net.Income.Flag <- NULL
-str(bankruptcy)
 ```
 
+
+## Normalizing and Dummy-fying the Data
 ```{r}
 # Using model.matrix to convert all the factors to dummy variables
 # We are converting all of the factors into dummy variables as the input into knn has to be numeric
-
 bankmm <- as.data.frame(model.matrix(~.-1,bankruptcy))
-str(bankmm)
 
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)
@@ -47,43 +55,61 @@ bank_norm <- as.data.frame(lapply(bank_random, normalize))
 
 ```
 
+## Creating our Train and Test Sets
 ```{r}
-# Selects 10000 random rows for test data
+# Selects a random subset of 20% of the rows for test data
 set.seed(12345)
-test_set <- sample(1:nrow(bank_norm), 3000) 
-# Depending on R-version and computer, different rows may be selected. 
-# If that happens, results are different. 
+test_set <- sample(1:nrow(bank_norm), 0.2*nrow(bank_norm)) 
 
 # Create a train set and test set
-#First the predictors - all columns except the yyes column
+#First the predictors - all columns except the bankrupt (our y variable) column
 bank_train <- bank_norm[-test_set, -match("Bankrupt.",names(bank_norm))]
 bank_test <- bank_norm[test_set, -match("Bankrupt.",names(bank_norm))]
 
-#Now the response (aka Labels) - only the yyes column
+#Now the response (aka Labels) - only the bankrupt column
 bank_train_labels <- bank_norm[-test_set, "Bankrupt."]
 bank_test_labels <- bank_norm[test_set, "Bankrupt."]
 
+#Creating train and test sets with the bankrupt column for other models
+bank_train_full<- bank_norm[-test_set, ]
+bank_test_full<- bank_norm[test_set, ]
 ```
 
+# Individual Models and Testing
+
+## Logistic Regression Model Creation
 ```{r}
-bank_train_new<- bank_norm[-test_set, ]
-bank_test_new<- bank_norm[test_set, ]
+logmodel <- lm(Bankrupt. ~., data = bank_train_full)
+```
+
+## Logistic Model Testing
+```{r}
+library(caret)
+
+LogPred <- predict(logmodel, bank_test_full)
+
+predbin_log <- ifelse(LogPred >= 0.5, 1, 0)
+confusionMatrix(as.factor(predbin_log), as.factor(bank_test_full$Bankrupt.), positive = "1")
+```
+
+## Simple Neural Net Creation
+```{r, cache=TRUE}
 library(neuralnet)
-simplemodel <- neuralnet(Bankrupt. ~ ., data = bank_train_new, hidden = 1)
+simplemodel <- neuralnet(Bankrupt. ~ ., data = bank_train_full, hidden = 1)
 plot(simplemodel)
 ```
 
+## Testing our First Neural Net
 ```{r}
-simplepred <- predict(simplemodel,bank_test_new)
+simplepred <- predict(simplemodel,bank_test_full)
 summary(simplepred)
 simplebin <- ifelse(simplepred >= 0.5, 1, 0)
-library(caret)
-confusionMatrix(as.factor(simplebin),as.factor(bank_test_new$Bankrupt.), positive = "1")
+confusionMatrix(as.factor(simplebin),as.factor(bank_test_full$Bankrupt.), positive = "1")
 
 ```
 
-## KNN
-```{r}
+## KNN Model Creation
+```{r, cache=TRUE}
 library(class)
 bank_model <- knn(bank_train,bank_test, bank_train_labels, k = 50)
 confusionMatrix(as.factor(bank_model), as.factor(bank_test_labels), positive = "1")
