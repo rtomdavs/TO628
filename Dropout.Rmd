@@ -19,20 +19,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Reading and Cleaning
 ```{r}
+#Reading in the dataset
 drops <- read.csv("dataset.csv")
 
+#Converting our target variable into a factor to check the levels
 drops$Target <- as.factor(drops$Target)
-
 summary(drops)
 
+#Removing the enrolled students, for later prediction
 nonenr <- subset(drops, drops$Target != "Enrolled")
 
+#Switching target variable to 1 or 0
 nonenr$Target <- ifelse(nonenr$Target == "Dropout", 1, 0)
 ```
 
-
+# Initial Loading and Logistic Regression
 ## Testing and Training Sets
 ```{r}
+set.seed(12345)
 trainrows <- sample(nrow(nonenr), 0.8*nrow(nonenr))
 
 droptrain <- nonenr[trainrows, ]
@@ -44,7 +48,7 @@ droptest <- nonenr[-trainrows, ]
 logmod <- lm(Target ~., data = droptrain)
 ```
 
-## Testing Logistoc Model
+## Testing Logistic Model
 ```{r}
 library(caret)
 
@@ -53,3 +57,4 @@ pblog <- ifelse(Logpred >= 0.5, 1, 0)
 confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
 ```
 
+# Creating KNN model
