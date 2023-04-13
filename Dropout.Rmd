@@ -19,14 +19,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Reading and Cleaning
 ```{r}
+#Reading in the dataset
 drops <- read.csv("dataset.csv")
 
+#Converting our target variable into a factor to check the levels
 drops$Target <- as.factor(drops$Target)
-
 summary(drops)
 
+#Removing the enrolled students, for later prediction
 nonenr <- subset(drops, drops$Target != "Enrolled")
 
+#Switching target variable to 1 or 0
 nonenr$Target <- ifelse(nonenr$Target == "Dropout", 1, 0)
 ```
 
