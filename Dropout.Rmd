@@ -1,0 +1,55 @@
+---
+title: "College Dropout Prediction"
+author: "The Kumar Kids"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: spacelab
+    highlight: zenburn
+date: "2023-04-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Initial Model Building and Testing
+
+## Reading and Cleaning
+```{r}
+drops <- read.csv("dataset.csv")
+
+drops$Target <- as.factor(drops$Target)
+
+summary(drops)
+
+nonenr <- subset(drops, drops$Target != "Enrolled")
+
+nonenr$Target <- ifelse(nonenr$Target == "Dropout", 1, 0)
+```
+
+
+## Testing and Training Sets
+```{r}
+trainrows <- sample(nrow(nonenr), 0.8*nrow(nonenr))
+
+droptrain <- nonenr[trainrows, ]
+droptest <- nonenr[-trainrows, ]
+```
+
+## Building Logistic Model
+```{r}
+logmod <- lm(Target ~., data = droptrain)
+```
+
+## Testing Logistoc Model
+```{r}
+library(caret)
+
+Logpred <- predict(logmod, droptest)
+pblog <- ifelse(Logpred >= 0.5, 1, 0)
+confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
+```
+
