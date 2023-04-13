@@ -26,7 +26,7 @@ drops <- read.csv("dataset.csv")
 factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
           "Nacionality", "Mother.s.qualification", "Father.s.qualification", "Mother.s.occupation",
           "Father.s.occupation", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
-          "Gender", "Scholarship.holder", "International", "Target")
+          "Gender", "Scholarship.holder", "International")
 
 
 drops[factorcols] <- lapply(drops[factorcols], factor)
@@ -34,6 +34,11 @@ str(drops)
 
 #Removing the enrolled students, for later prediction
 nonenr <- subset(drops, drops$Target != "Enrolled")
+str(nonenr)
+
+#Factorizing target
+nonenr$Target <- as.factor(nonenr$Target)
+str(nonenr)
 
 #Converting to Model Matrix
 dummydrop <- as.data.frame(model.matrix(~., nonenr))
@@ -64,6 +69,8 @@ library(caret)
 Logpred <- predict(logmod, droptest)
 pblog <- ifelse(Logpred >= 0.5, 1, 0)
 confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
+
+summary(droptest)
 ```
 
 # Creating KNN model
