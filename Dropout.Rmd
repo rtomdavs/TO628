@@ -50,8 +50,6 @@ trainrows <- sample(nrow(dummydrop), 0.8*nrow(dummydrop))
 
 droptrain <- dummydrop[trainrows, ]
 droptest <- dummydrop[-trainrows, ]
-
-
 ```
 
 ## Building Logistic Model
