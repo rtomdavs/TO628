@@ -22,30 +22,41 @@ knitr::opts_chunk$set(echo = TRUE)
 #Reading in the dataset
 drops <- read.csv("dataset.csv")
 
-#Converting our target variable into a factor to check the levels
-drops$Target <- as.factor(drops$Target)
-summary(drops)
+#Converting appropriate columns into factor
+factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
+          "Nacionality", "Mother.s.qualification", "Father.s.qualification", "Mother.s.occupation",
+          "Father.s.occupation", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
+          "Gender", "Scholarship.holder", "International", "Target")
+
+
+drops[factorcols] <- lapply(drops[factorcols], factor)
+str(drops)
 
 #Removing the enrolled students, for later prediction
 nonenr <- subset(drops, drops$Target != "Enrolled")
 
-#Switching target variable to 1 or 0
-nonenr$Target <- ifelse(nonenr$Target == "Dropout", 1, 0)
+#Converting to Model Matrix
+dummydrop <- as.data.frame(model.matrix(~., nonenr))
+
+
+#summary(nonenr)
 ```
 
 # Initial Loading and Logistic Regression
 ## Testing and Training Sets
 ```{r}
 set.seed(12345)
-trainrows <- sample(nrow(nonenr), 0.8*nrow(nonenr))
+trainrows <- sample(nrow(dummydrop), 0.8*nrow(dummydrop))
 
-droptrain <- nonenr[trainrows, ]
-droptest <- nonenr[-trainrows, ]
+droptrain <- dummydrop[trainrows, ]
+droptest <- dummydrop[-trainrows, ]
+
+
 ```
 
 ## Building Logistic Model
 ```{r}
-logmod <- lm(Target ~., data = droptrain)
+logmod <- lm(TargetGraduate ~., data = droptrain)
 ```
 
 ## Testing Logistic Model
