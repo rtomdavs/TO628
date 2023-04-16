@@ -100,7 +100,7 @@ summary(droptest)
 
 ## Building Logistic Model
 ```{r}
-logmod <- lm(TargetGraduate ~., data = droptrain)
+logmod <- glm(TargetGraduate ~., data = droptrain, family = "binomial")
 ```
 
 ## Testing Logistic Model
