@@ -2013,7 +2013,7 @@ border-radius: 0px;
 </div>
 <div id="building-logistic-model" class="section level2">
 <h2>Building Logistic Model</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>logmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(TargetGraduate <span class="sc">~</span>., <span class="at">data =</span> droptrain)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>logmod <span class="ot">&lt;-</span> <span class="fu">glm</span>(TargetGraduate <span class="sc">~</span>., <span class="at">data =</span> droptrain, <span class="at">family =</span> <span class="st">&quot;binomial&quot;</span>)</span></code></pre></div>
 </div>
 <div id="testing-logistic-model" class="section level2">
 <h2>Testing Logistic Model</h2>
@@ -2021,34 +2021,34 @@ border-radius: 0px;
 <pre><code>## Loading required package: ggplot2</code></pre>
 <pre><code>## Loading required package: lattice</code></pre>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Logpred <span class="ot">&lt;-</span> <span class="fu">predict</span>(logmod, droptest)</span></code></pre></div>
-<pre><code>## Warning in predict.lm(logmod, droptest): prediction from a rank-deficient fit
-## may be misleading</code></pre>
+<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>pblog <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(Logpred <span class="sc">&gt;=</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(<span class="fu">as.factor</span>(pblog), <span class="fu">as.factor</span>(droptest<span class="sc">$</span>Target), <span class="at">positive =</span> <span class="st">&quot;1&quot;</span>)</span></code></pre></div>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction   0   1
-##          0 218  20
-##          1  59 429
+##          0 237  40
+##          1  40 409
 ##                                           
-##                Accuracy : 0.8912          
-##                  95% CI : (0.8662, 0.9129)
+##                Accuracy : 0.8898          
+##                  95% CI : (0.8647, 0.9117)
 ##     No Information Rate : 0.6185          
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##     P-Value [Acc &gt; NIR] : &lt;2e-16          
 ##                                           
-##                   Kappa : 0.763           
+##                   Kappa : 0.7665          
 ##                                           
-##  Mcnemar&#39;s Test P-Value : 1.909e-05       
+##  Mcnemar&#39;s Test P-Value : 1               
 ##                                           
-##             Sensitivity : 0.9555          
-##             Specificity : 0.7870          
-##          Pos Pred Value : 0.8791          
-##          Neg Pred Value : 0.9160          
+##             Sensitivity : 0.9109          
+##             Specificity : 0.8556          
+##          Pos Pred Value : 0.9109          
+##          Neg Pred Value : 0.8556          
 ##              Prevalence : 0.6185          
-##          Detection Rate : 0.5909          
-##    Detection Prevalence : 0.6722          
-##       Balanced Accuracy : 0.8712          
+##          Detection Rate : 0.5634          
+##    Detection Prevalence : 0.6185          
+##       Balanced Accuracy : 0.8833          
 ##                                           
 ##        &#39;Positive&#39; Class : 1               
 ## </code></pre>
@@ -2363,6 +2363,37 @@ characteristics are the biggest predictors of dropping out.</p>
 <li>56.23% Debtor1</li>
 <li>32.99% Course2</li>
 </ul>
+</div>
+</div>
+<div id="combining-models-for-a-stacked-decision-tree" class="section level1">
+<h1>Combining Models for a Stacked Decision Tree</h1>
+<div id="making-new-data-frames-with-predictions" class="section level2">
+<h2>Making New Data Frames with Predictions</h2>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Adding Prediction Columns for Every Model</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>dropstack <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(droptest<span class="sc">$</span>TargetGraduate, Logpred, KNNmodel, ann_pred, tree_pred, forest_pred)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Renaming Columns</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dropstack)[<span class="dv">1</span>] <span class="ot">=</span> <span class="st">&quot;yyes&quot;</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dropstack)[<span class="dv">3</span>] <span class="ot">=</span> <span class="st">&quot;KNNPred&quot;</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dropstack)[<span class="dv">4</span>] <span class="ot">=</span> <span class="st">&quot;ANNPred&quot;</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dropstack)[<span class="dv">5</span>] <span class="ot">=</span> <span class="st">&quot;TreePred&quot;</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dropstack)[<span class="dv">6</span>] <span class="ot">=</span> <span class="st">&quot;ForestPred&quot;</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dropstack)</span></code></pre></div>
+<pre><code>##       yyes           Logpred         KNNPred    ANNPred        TreePred
+##  Min.   :0.0000   Min.   :-21.1998   0:150   Min.   :0.02619   0:237   
+##  1st Qu.:0.0000   1st Qu.: -3.6453   1:576   1st Qu.:0.02619   1:489   
+##  Median :1.0000   Median :  1.7609           Median :0.93981           
+##  Mean   :0.6185   Mean   : -0.2089           Mean   :0.61345           
+##  3rd Qu.:1.0000   3rd Qu.:  3.3971           3rd Qu.:0.93981           
+##  Max.   :1.0000   Max.   : 17.0524           Max.   :0.93981           
+##  ForestPred
+##  0:249     
+##  1:477     
+##            
+##            
+##            
+## </code></pre>
 </div>
 </div>
 

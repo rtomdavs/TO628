@@ -93,8 +93,6 @@ knn_test <- drop_norm[-trainrows, -match("TargetGraduate", names(drop_norm))]
 #Sets with just Y variable
 train_labels <- drop_norm[trainrows, "TargetGraduate"]
 test_labels <- drop_norm[-trainrows, "TargetGraduate"]
-
-summary(droptest)
 ```
 
 
@@ -111,8 +109,8 @@ Logpred <- predict(logmod, droptest)
 pblog <- ifelse(Logpred >= 0.5, 1, 0)
 confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
 
-#Accuracy of 89.12%
-#Kappa of 0.763
+#Accuracy of 88.98%
+#Kappa of 0.7665
 ```
 
 ## KNN Model Creation
@@ -169,6 +167,8 @@ confusionMatrix(as.factor(tree_pred), as.factor(droptest$TargetGraduate), positi
 library(randomForest)
 
 forestmodel <- randomForest(as.factor(TargetGraduate) ~., data = droptrain)
+
+varImpPlot(forestmodel)
 ```
 
 
@@ -180,8 +180,6 @@ confusionMatrix(as.factor(forest_pred), as.factor(droptest$TargetGraduate), posi
 
 #Accuracy of 91.18%
 #Kappa for this model is 0.8095
-
-summary(droptree)
 ```
 
 ## Individual Initial Model Results
@@ -194,4 +192,46 @@ Attribute Usage:
 - 58.47%	Curricular.units.2nd.sem..credited.
 - 56.23%	Debtor1
 - 32.99%	Course2
+
+
+# Combining Models for a Stacked Decision Tree
+
+## Making New Data Frames with Predictions
+```{r}
+# Adding Prediction Columns for Every Model
+dropstack <- data.frame(droptest$TargetGraduate, Logpred, KNNmodel, ann_pred, tree_pred, forest_pred)
+
+# Renaming Columns
+colnames(dropstack)[1] = "Graduated"
+colnames(dropstack)[3] = "KNNPred"
+colnames(dropstack)[4] = "ANNPred"
+colnames(dropstack)[5] = "TreePred"
+colnames(dropstack)[6] = "ForestPred"
+
+summary(dropstack)
+```
+
+## Test and Train for Stacked Data
+```{r}
+set.seed(12345)
+trainrows <- sample(nrow(dropstack), 0.8*nrow(dropstack))
+
+stack_train <- dropstack[trainrows, ]
+stack_test <- dropstack[-trainrows, ]
+```
+
+## Decision Tree on Telestack
+```{r}
+stack_tree <- C5.0(as.factor(Graduated) ~., data = stack_train)
+
+plot(stack_tree)
+```
+
+## Evaluating Decision Tree on Telestack
+```{r}
+stack_tree_pred <- predict(stack_tree, stack_test)
+
+confusionMatrix(as.factor(stack_tree_pred), as.factor(stack_test$Graduated), positive = "1")
+```
+
 
