@@ -15,17 +15,27 @@ date: "2023-04-13"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Initial Model Building and Testing
+# Getting Data Ready for Analysis
 
 ## Reading and Cleaning
 ```{r}
 #Reading in the dataset
 drops <- read.csv("dataset.csv")
 
+#Dropping Parents' Qualifications
+drops$Mother.s.occupation <- NULL
+drops$Mother.s.qualification <- NULL
+drops$Father.s.occupation <- NULL
+drops$Father.s.qualification <- NULL
+
 #Converting appropriate columns into factor
+#factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
+#          "Nacionality", "Mother.s.qualification", "Father.s.qualification", "Mother.s.occupation",
+#          "Father.s.occupation", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
+#          "Gender", "Scholarship.holder", "International")
+
 factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
-          "Nacionality", "Mother.s.qualification", "Father.s.qualification", "Mother.s.occupation",
-          "Father.s.occupation", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
+          "Nacionality", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
           "Gender", "Scholarship.holder", "International")
 
 
@@ -34,28 +44,59 @@ str(drops)
 
 #Removing the enrolled students, for later prediction
 nonenr <- subset(drops, drops$Target != "Enrolled")
-str(nonenr)
+
 
 #Factorizing target
 nonenr$Target <- as.factor(nonenr$Target)
-str(nonenr)
+
 
 #Converting to Model Matrix
 dummydrop <- as.data.frame(model.matrix(~., nonenr))
 
-
 #summary(nonenr)
 ```
 
-# Initial Loading and Logistic Regression
+## Creating Normalized Version of Data
+```{r}
+# Randomize the rows in the data (shuffling the rows)
+set.seed(12345)
+randomdrop <- dummydrop[sample(nrow(dummydrop)),]
+
+#Normalize the data
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# we are going to normalize everything 
+drop_norm <- as.data.frame(lapply(randomdrop, normalize))
+drop_norm$X.Intercept. <- NULL
+drop_norm$Nacionality13 <- NULL
+drop_norm$Nacionality20 <- NULL
+```
+
+# Initial Model Creation
+
 ## Testing and Training Sets
 ```{r}
+#Setting Seed for Ease of Replication
 set.seed(12345)
-trainrows <- sample(nrow(dummydrop), 0.8*nrow(dummydrop))
+trainrows <- sample(nrow(drop_norm), 0.8*nrow(drop_norm))
 
-droptrain <- dummydrop[trainrows, ]
-droptest <- dummydrop[-trainrows, ]
+#Training and Testing Sets with full columns
+droptrain <- drop_norm[trainrows, ]
+droptest <- drop_norm[-trainrows, ]
+
+#Sets without Y variable
+knn_train <- drop_norm[trainrows, -match("TargetGraduate", names(drop_norm))]
+knn_test <- drop_norm[-trainrows, -match("TargetGraduate", names(drop_norm))]
+
+#Sets with just Y variable
+train_labels <- drop_norm[trainrows, "TargetGraduate"]
+test_labels <- drop_norm[-trainrows, "TargetGraduate"]
+
+summary(droptest)
 ```
+
 
 ## Building Logistic Model
 ```{r}
@@ -70,7 +111,87 @@ Logpred <- predict(logmod, droptest)
 pblog <- ifelse(Logpred >= 0.5, 1, 0)
 confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
 
-summary(droptest)
+#Accuracy of 89.12%
+#Kappa of 0.763
 ```
 
-# Creating KNN model
+## KNN Model Creation
+```{r, cache=TRUE}
+library(class)
+
+set.seed(12345)
+KNNmodel <- knn(knn_train, knn_test, train_labels, k = 60)
+```
+
+## KNN Model Testing
+```{r, cache=TRUE}
+confusionMatrix(as.factor(KNNmodel), as.factor(test_labels), positive = "1")
+
+#Accuracy of 80.85%
+#Kappa of 0.5489
+```
+
+## ANN Model Creation
+```{r, cache= TRUE}
+library(neuralnet)
+model_ann <- neuralnet(TargetGraduate ~ ., data = droptrain, hidden = 1)
+```
+
+## ANN Model Testing
+```{r, cache= TRUE}
+library (caret)
+ann_pred <- predict(model_ann, droptest)
+predbin_ann <- ifelse(ann_pred >= 0.5, 1, 0)
+confusionMatrix(as.factor(predbin_ann), as.factor(droptest$TargetGraduate), positive = "1")
+
+#Accuracy of 89.39%
+#Kappa of 0.7723
+```
+
+## Decision Tree Model Creation
+```{r, cache=TRUE}
+library(C50)
+
+droptree <- C5.0(as.factor(TargetGraduate) ~., data=droptrain)
+```
+
+## Decision Tree Model Testing
+```{r, cache=TRUE}
+tree_pred <- predict(droptree, droptest)
+confusionMatrix(as.factor(tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+
+#Accuracy of 90.36%
+#Kappa of 0.7899
+```
+
+## Random Forest Model Creation
+```{r, cache=TRUE}
+library(randomForest)
+
+forestmodel <- randomForest(as.factor(TargetGraduate) ~., data = droptrain)
+```
+
+
+## Random Forest Model Testing
+```{r, cache=TRUE}
+forest_pred <- predict(forestmodel, droptest)
+
+confusionMatrix(as.factor(forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+
+#Accuracy of 91.18%
+#Kappa for this model is 0.8095
+
+summary(droptree)
+```
+
+## Individual Initial Model Results
+So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at 0.8095, and the highest accuracy at 91.18%. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
+
+Attribute Usage:
+
+- 100.00%	Curricular.units.2nd.sem..approved.
+- 72.73%	Tuition.fees.up.to.date1
+- 58.47%	Curricular.units.2nd.sem..credited.
+- 56.23%	Debtor1
+- 32.99%	Course2
+
