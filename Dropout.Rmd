@@ -199,4 +199,50 @@ confusionMatrix(as.factor(stack_tree_pred), as.factor(stack_test$Graduated), pos
 ```
 
 
-# Using our Model to Predict Enrolled Students
+# Using our Models to Predict Enrolled Students
+
+## Creating Predictions Using Our Models
+```{r}
+#Reading in our Enrolled Students
+enrolled <- read.csv("cleaned_enrolls.csv")
+
+#Predicting on our enrolled students using logistic model
+log_enr_pred <- predict(logmod, enrolled)
+pbenr <- ifelse(logenrolled >= 0.5, 1, 0)
+
+#Predicting on our enrolled students using ANN model
+ann_enr_pred <- predict(model_ann, enrolled)
+pb_ann_enr <- ifelse(ann_enr_pred >= 0.6, 1, 0)
+
+#Predicting on our enrolled students using decision tree
+tree_enr_pred <- predict(droptree, enrolled)
+
+#Predicting on our enrolled students using random forest
+forest_enr_pred <- predict(forestmodel, enrolled)
+```
+
+## Adding predictions to dataframe
+```{r}
+enrolled_preds <- data.frame(pbenr, pb_ann_enr, tree_enr_pred, forest_enr_pred)
+enrolled_preds$tree_enr_pred <- as.numeric(enrolled_preds$tree_enr_pred)
+enrolled_preds$tree_enr_pred <- ifelse(enrolled_preds$tree_enr_pred == 2, 1, 0)
+enrolled_preds$forest_enr_pred <- as.numeric(enrolled_preds$forest_enr_pred)
+enrolled_preds$forest_enr_pred <- ifelse(enrolled_preds$forest_enr_pred == 2, 1, 0)
+
+
+summary(enrolled_preds)
+```
+
+## Adding Prediction Column and Subsetting Enrolled Students
+
+## Analysis of our predictions on enrolled students
+
+When we apply our models to the enrolled students, we can see that they all slightly overpredict the actual incidence of graduation.
+
+Our models predict the following graduation rates:
+- Logistic Model = 64%
+- ANN Model = 72%
+- Decision Tree = 71%
+- Random Forest = 75%.
+
+Whereas the actual rate of graduation is around 61%. The true utility comes from analyzing what of these predicted enrolled students have in common. For that we can reference our 
