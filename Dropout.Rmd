@@ -234,6 +234,18 @@ summary(enrolled_preds)
 ```
 
 ## Adding Prediction Column and Subsetting Enrolled Students
+```{r}
+enrolled$predictions <- pbenr
+
+dropouts <- subset(enrolled, enrolled$predictions == "1")
+graduates <- subset(enrolled, enrolled$predictions == "0")
+
+dropmeans <- colMeans(dropouts)
+gradmeans <- colMeans(graduates)
+
+enrolledmeans <- data.frame(dropmeans, gradmeans)
+```
+
 
 ## Analysis of our predictions on enrolled students
 
@@ -245,4 +257,4 @@ Our models predict the following graduation rates:
 - Decision Tree = 71%
 - Random Forest = 75%.
 
-Whereas the actual rate of graduation is around 61%. The true utility comes from analyzing what of these predicted enrolled students have in common. For that we can reference our 
+Whereas the actual rate of graduation is around 61%. The true utility comes from analyzing what of these predicted enrolled students have in common. For that we can add our predictions and compare the characteristics of those who were predicted to dropout vs. those who were predicted to graduate
