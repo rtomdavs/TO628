@@ -15,6 +15,24 @@ date: "2023-04-13"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Introduction
+
+### Background of the Data
+
+In this report, we will be analyzing a dataset of students who have either graduated, dropped out, or are still enrolled from a four year undergraduate degree. This data, which is amalgamated from several different sources, includes information on demographic, socioeconomic, macroeconomic, and academic factors for these students. The success of students in higher education is vital to the overall productivity of an economy, as human capital is a huge driver of growth.
+
+### Structure of the Data
+
+This dataset has 31 overall columns, with 1 being our target variable and the others being characteristics of both the students and their environment. We have demographic information like marital status, gender, and age of the students. We also have financial information of the students like whether they are a debtor, have their tuition fees up to date, or are on a scholarship. There are also academic characteristics of these students such as their approved credits, course of study, or whether they have educational special needs. Lastly, there are macroeconomic indicators as well as they are strongly correlated with trends in education.
+
+Our target variable for training the model will be whether or not the students graduated, and we will then use the models we built on the students that are currently enrolled to predict whether they have a high likelihood of dropping out.
+
+### Use Case
+
+We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out why they have a much higher dropout rate than the average in the United States. Reports indicate that around 33% of undergraduates do not complete their degree program. Whereas in our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students did not graduate. Knowing the characteristics of students who are likely to drop out, the academic advisors could further evaluate the situation of these “likely-to-dropout” students case by case and reach out to offer academic planning/support to reduce their likelihood of dropping out. With the number of enrolled students who would likely drop out, the finance office can estimate the amount of tuition the university would lose per year with this number. The university admission office could also use this number to decide the number of transfer students we can allow next year to fill the gap. 
+
+
+
 # Getting Data Ready for Analysis
 
 ## Reading and Cleaning
@@ -54,6 +72,8 @@ nonenr$Target <- as.factor(nonenr$Target)
 dummydrop <- as.data.frame(model.matrix(~., nonenr))
 
 #summary(nonenr)
+
+summary(dummydrop)
 ```
 
 ## Creating Normalized Version of Data
@@ -73,6 +93,9 @@ drop_norm$X.Intercept. <- NULL
 drop_norm$Nacionality13 <- NULL
 drop_norm$Nacionality20 <- NULL
 ```
+
+
+
 
 # Initial Model Creation
 
@@ -194,6 +217,8 @@ Attribute Usage:
 - 32.99%	Course2
 
 
+
+
 # Combining Models for a Stacked Decision Tree
 
 ## Making New Data Frames with Predictions
@@ -235,3 +260,4 @@ confusionMatrix(as.factor(stack_tree_pred), as.factor(stack_test$Graduated), pos
 ```
 
 
+# Using our Model to Predict Enrolled Students
