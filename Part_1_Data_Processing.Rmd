@@ -229,10 +229,13 @@ summary(enroll_norm)
 
 
 ## Save Cleaned Datasets
+
 ```{r}
 # training set
 write.csv(drop_norm, file = "cleaned_nonenrolls.csv", row.names = FALSE)
-# prediction set
+# prediction set 
 write.csv(enroll_norm, file = "cleaned_enrolls.csv", row.names = FALSE)
 ```
 
+- `cleaned_nonenrolls.csv` will be used for modeling
+- `cleaned_enrolls.csv` will be used to apply the prediction models

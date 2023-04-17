@@ -2467,8 +2467,13 @@ summary(enroll_norm)</code></pre>
 <h2>Save Cleaned Datasets</h2>
 <pre class="r"><code># training set
 write.csv(drop_norm, file = &quot;cleaned_nonenrolls.csv&quot;, row.names = FALSE)
-# prediction set
+# prediction set 
 write.csv(enroll_norm, file = &quot;cleaned_enrolls.csv&quot;, row.names = FALSE)</code></pre>
+<ul>
+<li><code>cleaned_nonenrolls.csv</code> will be used for modeling</li>
+<li><code>cleaned_enrolls.csv</code> will be used to apply the
+prediction models</li>
+</ul>
 </div>
 </div>
 
