@@ -25,20 +25,80 @@ In this report, we will be analyzing a dataset of students who have either gradu
 
 This dataset has 31 overall columns, with 1 being our target variable and the others being characteristics of both the students and their environment. We have demographic information like marital status, gender, and age of the students. We also have financial information of the students like whether they are a debtor, have their tuition fees up to date, or are on a scholarship. There are also academic characteristics of these students such as their approved credits, course of study, or whether they have educational special needs. Lastly, there are macroeconomic indicators as well as they are strongly correlated with trends in education.
 
-Our target variable for training the model will be whether or not the students graduated, and we will then use the models we built on the students that are currently enrolled to predict whether they have a high likelihood of dropping out. When we do our analysis, the column "TargetGraduate" indicates whether that student graduated with a value of "1" for graudate and "0" for non graduate.
+Our target variable for training the model will be whether or not the students graduated, and we will then use the models we built on the students that are currently enrolled to predict whether they have a high likelihood of dropping out.
 
 ### Use Case
 
 We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out why they have a much higher dropout rate than the average in the United States. Reports indicate that around 33% of undergraduates do not complete their degree program. Whereas in our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students did not graduate. Knowing the characteristics of students who are likely to drop out, the academic advisors could further evaluate the situation of these “likely-to-dropout” students case by case and reach out to offer academic planning/support to reduce their likelihood of dropping out. With the number of enrolled students who would likely drop out, the finance office can estimate the amount of tuition the university would lose per year with this number. The university admission office could also use this number to decide the number of transfer students we can allow next year to fill the gap. 
 
 
+
+# Getting Data Ready for Analysis
+
+## Reading and Cleaning
+```{r}
+#Reading in the dataset
+drops <- read.csv("dataset.csv")
+
+#Dropping Parents' Qualifications
+drops$Mother.s.occupation <- NULL
+drops$Mother.s.qualification <- NULL
+drops$Father.s.occupation <- NULL
+drops$Father.s.qualification <- NULL
+
+#Converting appropriate columns into factor
+#factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
+#          "Nacionality", "Mother.s.qualification", "Father.s.qualification", "Mother.s.occupation",
+#          "Father.s.occupation", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
+#          "Gender", "Scholarship.holder", "International")
+
+factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
+          "Nacionality", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
+          "Gender", "Scholarship.holder", "International")
+
+
+drops[factorcols] <- lapply(drops[factorcols], factor)
+
+
+#Removing the enrolled students, for later prediction
+nonenr <- subset(drops, drops$Target != "Enrolled")
+
+
+#Factorizing target
+nonenr$Target <- as.factor(nonenr$Target)
+
+
+#Converting to Model Matrix
+dummydrop <- as.data.frame(model.matrix(~., nonenr))
+
+#summary(nonenr)
+```
+
+## Creating Normalized Version of Data
+```{r}
+# Randomize the rows in the data (shuffling the rows)
+set.seed(12345)
+randomdrop <- dummydrop[sample(nrow(dummydrop)),]
+
+#Normalize the data
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# we are going to normalize everything 
+drop_norm <- as.data.frame(lapply(randomdrop, normalize))
+drop_norm$X.Intercept. <- NULL
+drop_norm$Nacionality13 <- NULL
+drop_norm$Nacionality20 <- NULL
+```
+
+
+
+
 # Initial Model Creation
 
 ## Testing and Training Sets
 ```{r}
-#Loading in CSV
-drop_norm <- read.csv("cleaned_nonenrolls.csv")
-
 #Setting Seed for Ease of Replication
 set.seed(12345)
 trainrows <- sample(nrow(drop_norm), 0.8*nrow(drop_norm))
@@ -70,8 +130,8 @@ Logpred <- predict(logmod, droptest)
 pblog <- ifelse(Logpred >= 0.5, 1, 0)
 confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
 
-#Accuracy of 87.88%
-#Kappa of 0.7446
+#Accuracy of 88.98%
+#Kappa of 0.7665
 ```
 
 ## KNN Model Creation
@@ -79,15 +139,15 @@ confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
 library(class)
 
 set.seed(12345)
-KNNmodel <- knn(knn_train, knn_test, train_labels, k = 58)
+KNNmodel <- knn(knn_train, knn_test, train_labels, k = 60)
 ```
 
 ## KNN Model Testing
 ```{r, cache=TRUE}
 confusionMatrix(as.factor(KNNmodel), as.factor(test_labels), positive = "1")
 
-#Accuracy of 80.85% (new accuracy 55%?)
-#Kappa of 0.5489 (Negative Kappa?)
+#Accuracy of 80.85%
+#Kappa of 0.5489
 ```
 
 ## ANN Model Creation
@@ -100,7 +160,7 @@ model_ann <- neuralnet(TargetGraduate ~ ., data = droptrain, hidden = 1)
 ```{r, cache= TRUE}
 library (caret)
 ann_pred <- predict(model_ann, droptest)
-predbin_ann <- ifelse(ann_pred >= 0.6, 1, 0)
+predbin_ann <- ifelse(ann_pred >= 0.5, 1, 0)
 confusionMatrix(as.factor(predbin_ann), as.factor(droptest$TargetGraduate), positive = "1")
 
 #Accuracy of 89.39%
