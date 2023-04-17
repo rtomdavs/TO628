@@ -58,7 +58,7 @@ factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendanc
 
 
 drops[factorcols] <- lapply(drops[factorcols], factor)
-str(drops)
+
 
 #Removing the enrolled students, for later prediction
 nonenr <- subset(drops, drops$Target != "Enrolled")
@@ -72,8 +72,6 @@ nonenr$Target <- as.factor(nonenr$Target)
 dummydrop <- as.data.frame(model.matrix(~., nonenr))
 
 #summary(nonenr)
-
-summary(dummydrop)
 ```
 
 ## Creating Normalized Version of Data
@@ -247,6 +245,7 @@ stack_test <- dropstack[-trainrows, ]
 
 ## Decision Tree on Telestack
 ```{r}
+library(C50)
 stack_tree <- C5.0(as.factor(Graduated) ~., data = stack_train)
 
 plot(stack_tree)
