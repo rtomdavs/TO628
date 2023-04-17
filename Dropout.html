@@ -1740,23 +1740,22 @@ allow next year to fill the gap.</p>
 <h2>Testing and Training Sets</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Loading in CSV</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>drop_norm <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;cleaned_nonenrolls.csv&quot;</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>drop_norm<span class="sc">$</span>X <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Setting Seed for Ease of Replication</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>trainrows <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(drop_norm), <span class="fl">0.8</span><span class="sc">*</span><span class="fu">nrow</span>(drop_norm))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#Training and Testing Sets with full columns</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>droptrain <span class="ot">&lt;-</span> drop_norm[trainrows, ]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>droptest <span class="ot">&lt;-</span> drop_norm[<span class="sc">-</span>trainrows, ]</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#Sets without Y variable</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>knn_train <span class="ot">&lt;-</span> drop_norm[trainrows, <span class="sc">-</span><span class="fu">match</span>(<span class="st">&quot;TargetGraduate&quot;</span>, <span class="fu">names</span>(drop_norm))]</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>knn_test <span class="ot">&lt;-</span> drop_norm[<span class="sc">-</span>trainrows, <span class="sc">-</span><span class="fu">match</span>(<span class="st">&quot;TargetGraduate&quot;</span>, <span class="fu">names</span>(drop_norm))]</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#Sets with just Y variable</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>train_labels <span class="ot">&lt;-</span> drop_norm[trainrows, <span class="st">&quot;TargetGraduate&quot;</span>]</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>test_labels <span class="ot">&lt;-</span> drop_norm[<span class="sc">-</span>trainrows, <span class="st">&quot;TargetGraduate&quot;</span>]</span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Setting Seed for Ease of Replication</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>trainrows <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(drop_norm), <span class="fl">0.8</span><span class="sc">*</span><span class="fu">nrow</span>(drop_norm))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Training and Testing Sets with full columns</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>droptrain <span class="ot">&lt;-</span> drop_norm[trainrows, ]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>droptest <span class="ot">&lt;-</span> drop_norm[<span class="sc">-</span>trainrows, ]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#Sets without Y variable</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>knn_train <span class="ot">&lt;-</span> drop_norm[trainrows, <span class="sc">-</span><span class="fu">match</span>(<span class="st">&quot;TargetGraduate&quot;</span>, <span class="fu">names</span>(drop_norm))]</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>knn_test <span class="ot">&lt;-</span> drop_norm[<span class="sc">-</span>trainrows, <span class="sc">-</span><span class="fu">match</span>(<span class="st">&quot;TargetGraduate&quot;</span>, <span class="fu">names</span>(drop_norm))]</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#Sets with just Y variable</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>train_labels <span class="ot">&lt;-</span> drop_norm[trainrows, <span class="st">&quot;TargetGraduate&quot;</span>]</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>test_labels <span class="ot">&lt;-</span> drop_norm[<span class="sc">-</span>trainrows, <span class="st">&quot;TargetGraduate&quot;</span>]</span></code></pre></div>
 </div>
 <div id="building-logistic-model" class="section level2">
 <h2>Building Logistic Model</h2>
@@ -2064,8 +2063,79 @@ characteristics are the biggest predictors of dropping out.</p>
 ## </code></pre>
 </div>
 </div>
-<div id="using-our-model-to-predict-enrolled-students" class="section level1">
-<h1>Using our Model to Predict Enrolled Students</h1>
+<div id="using-our-models-to-predict-enrolled-students" class="section level1">
+<h1>Using our Models to Predict Enrolled Students</h1>
+<div id="creating-predictions-using-our-models" class="section level2">
+<h2>Creating Predictions Using Our Models</h2>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Reading in our Enrolled Students</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>enrolled <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;cleaned_enrolls.csv&quot;</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Predicting on our enrolled students using logistic model</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>log_enr_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(logmod, enrolled)</span></code></pre></div>
+<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
+## prediction from a rank-deficient fit may be misleading</code></pre>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>pbenr <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(log_enr_pred <span class="sc">&gt;=</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Predicting on our enrolled students using ANN model</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>ann_enr_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(model_ann, enrolled)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>pb_ann_enr <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(ann_enr_pred <span class="sc">&gt;=</span> <span class="fl">0.6</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Predicting on our enrolled students using decision tree</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>tree_enr_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(droptree, enrolled)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="co">#Predicting on our enrolled students using random forest</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(randomForest)</span></code></pre></div>
+<pre><code>## randomForest 4.7-1.1</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;randomForest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
+## 
+##     margin</code></pre>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>forest_enr_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(forestmodel, enrolled)</span></code></pre></div>
+</div>
+<div id="adding-predictions-to-dataframe" class="section level2">
+<h2>Adding predictions to dataframe</h2>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>enrolled_preds <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(pbenr, pb_ann_enr, tree_enr_pred, forest_enr_pred)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>enrolled_preds<span class="sc">$</span>tree_enr_pred <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(enrolled_preds<span class="sc">$</span>tree_enr_pred)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>enrolled_preds<span class="sc">$</span>tree_enr_pred <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(enrolled_preds<span class="sc">$</span>tree_enr_pred <span class="sc">==</span> <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>enrolled_preds<span class="sc">$</span>forest_enr_pred <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(enrolled_preds<span class="sc">$</span>forest_enr_pred)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>enrolled_preds<span class="sc">$</span>forest_enr_pred <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(enrolled_preds<span class="sc">$</span>forest_enr_pred <span class="sc">==</span> <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(enrolled_preds)</span></code></pre></div>
+<pre><code>##      pbenr          pb_ann_enr     tree_enr_pred    forest_enr_pred 
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:1.0000  
+##  Median :1.0000   Median :1.0000   Median :1.0000   Median :1.0000  
+##  Mean   :0.6411   Mean   :0.7179   Mean   :0.7078   Mean   :0.7557  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000</code></pre>
+</div>
+<div id="adding-prediction-column-and-subsetting-enrolled-students" class="section level2">
+<h2>Adding Prediction Column and Subsetting Enrolled Students</h2>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>enrolled<span class="sc">$</span>predictions <span class="ot">&lt;-</span> pbenr</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>dropouts <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>predictions <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>graduates <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>predictions <span class="sc">==</span> <span class="st">&quot;0&quot;</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>dropmeans <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>gradmeans <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>enrolledmeans <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(dropmeans, gradmeans)</span></code></pre></div>
+</div>
+<div id="analysis-of-our-predictions-on-enrolled-students" class="section level2">
+<h2>Analysis of our predictions on enrolled students</h2>
+<p>When we apply our models to the enrolled students, we can see that
+they all slightly overpredict the actual incidence of graduation.</p>
+<p>Our models predict the following graduation rates: - Logistic Model =
+64% - ANN Model = 72% - Decision Tree = 71% - Random Forest = 75%.</p>
+<p>Whereas the actual rate of graduation is around 61%. The true utility
+comes from analyzing what of these predicted enrolled students have in
+common. For that we can add our predictions and compare the
+characteristics of those who were predicted to dropout vs. those who
+were predicted to graduate.</p>
+</div>
 </div>
 
 
