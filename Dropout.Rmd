@@ -38,7 +38,6 @@ We will be posing as a consulting group hired on by the board of directors of th
 ```{r}
 #Loading in CSV
 drop_norm <- read.csv("cleaned_nonenrolls.csv")
-drop_norm$X <- NULL
 
 #Setting Seed for Ease of Replication
 set.seed(12345)

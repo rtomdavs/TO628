@@ -231,8 +231,8 @@ summary(enroll_norm)
 ## Save Cleaned Datasets
 ```{r}
 # training set
-write.csv(drop_norm, file = "cleaned_nonenrolls.csv")
+write.csv(drop_norm, file = "cleaned_nonenrolls.csv", row.names = FALSE)
 # prediction set
-write.csv(enroll_norm, file = "cleaned_enrolls.csv")
+write.csv(enroll_norm, file = "cleaned_enrolls.csv", row.names = FALSE)
 ```
 
