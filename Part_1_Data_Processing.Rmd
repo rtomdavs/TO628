@@ -1,0 +1,238 @@
+---
+title: "Data Preprocessing"
+author: "Junli Zhou"
+date: "2023-04-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Part 1: Data ETL (Extract, Transform and Load)
+
+## Data Loading and Exploration
+```{r}
+#Reading in the dataset
+drops <- read.csv("dataset.csv")
+```
+
+```{r}
+# get summary stats for all features
+summary(drops)
+```
+
+## Data Cleaning
+### Factorize Categorical Features
+```{r}
+#Converting appropriate columns into factor
+factorcols <- c("Marital.status", "Application.mode", "Daytime.evening.attendance", "Course", "Previous.qualification",
+         "Nacionality", "Mother.s.qualification", "Father.s.qualification", "Mother.s.occupation",
+         "Father.s.occupation", "Displaced", "Educational.special.needs", "Debtor", "Tuition.fees.up.to.date",
+         "Gender", "Scholarship.holder", "International")
+
+drops[factorcols] <- lapply(drops[factorcols], factor)
+str(drops)
+```
+
+
+### Split Training Data Set
+- "Enrolled" students are still in school and we do not know whether they will drop out
+- Therefore, we will extract "Enrolled" students as a separate dataset, train models on historical student data, and apply the best performing model on "Enrolled" students
+```{r}
+# Removing the "Enrolled" students for later prediction
+nonenr <- subset(drops, drops$Target != "Enrolled")
+
+# Saving "Enrolled" students as the prediction set
+enr <- subset(drops, drops$Target == "Enrolled")
+
+# Factorizing target
+nonenr$Target <- as.factor(nonenr$Target)
+
+# Remove Target variable for prediction dataset
+enr$Target <- NULL
+
+summary(nonenr)
+```
+
+
+### Create Dummy Variables for Categorical Features
+```{r}
+#Converting to Model Matrix
+dummydrop_ <- as.data.frame(model.matrix(~ . - 1, nonenr))
+
+summary(dummydrop_)
+```
+
+
+Issue 1: for categorical features with more than 2 levels, some levels might have few rows of data, while others have a lot. If we convert levels with few data to dummies, the dummies would only add noise when training model.
+Our solution: for each categorical feature with this problem, we will group the trivial levels to create an aggregated dummy variable called "Others". We define any levels with less than 5% of total values, or top 3 levels with most values (if these is only one levels with more than 5%), as trivial. 
+
+```{r}
+library(dplyr)
+
+# Marital Status
+nonenr %>% count(Marital.status) %>% mutate(n = n/sum(n))
+
+# Application Mode
+nonenr %>% count(Application.mode) %>% mutate(n = n/sum(n))
+
+# Course
+nonenr %>% count(Course) %>% mutate(n = n/sum(n))
+
+# Previous Qualification
+nonenr %>% count(Previous.qualification) %>% mutate(n = n/sum(n))
+
+# Nacionality
+nonenr %>% count(Nacionality) %>% mutate(n = n/sum(n))
+
+# Mother's Qualification
+nonenr %>% count(Mother.s.qualification) %>% mutate(n = n/sum(n))
+
+# Father's Qualification
+nonenr %>% count(Father.s.qualification) %>% mutate(n = n/sum(n))
+
+# Mother's Occupation
+nonenr %>% count(Mother.s.occupation) %>% mutate(n = n/sum(n))
+
+# Father's Occupation
+nonenr %>% count(Father.s.occupation) %>% mutate(n = n/sum(n))
+```
+
+| Variable Name          | Levels to Convert             |
+|------------------------|-------------------------------|
+| Marital Status         | 3-6                           |
+| Application Mode       | 2-7, 9-11, 13, 15-18          |
+| Course                 | Balanced                      |
+| Previous Qualification | 2-11, 13, 15-17               |
+| Nacionality            | 2-8, 10-13, 15-21             |
+| Mother's Qualification | 2, 4-12, 14-21, 24-29         |
+| Father's Qualification | 2, 4-13, 15-23, 25, 26, 29-34 |
+| Mother's Occupation    | 1, 2, 7, 9, 11-32             |
+| Father's Occupation    | 1-3, 12-46                    |
+
+Convert Levels to Others 
+```{r}
+# Marital Status
+nonenr <- nonenr %>% mutate(Marital.status = ifelse(Marital.status %in% c(seq(3, 6)), "Others", Marital.status))
+
+# Application Mode
+nonenr <- nonenr %>% mutate(Application.mode = ifelse(Application.mode %in% c(seq(2,7), seq(9,11), 13, seq(15,18)), "Others", Application.mode))
+
+# Previous Qualification
+nonenr <- nonenr %>% mutate(Previous.qualification = ifelse(Previous.qualification %in% c(seq(2,11), 13, seq(15,17)), "Others", Previous.qualification))
+
+# Nacionality
+nonenr <- nonenr %>% mutate(Nacionality = ifelse(Nacionality %in% c(seq(2,8), seq(10,13), seq(15,21)), "Others", Nacionality))
+
+# Mother's Qualification
+nonenr <- nonenr %>% mutate(Mother.s.qualification = ifelse(Mother.s.qualification %in% c(2, seq(4,12), seq(14,21), seq(24,29)), "Others", Mother.s.qualification))
+
+# Father's Qualification
+nonenr <- nonenr %>% mutate(Father.s.qualification = ifelse(Father.s.qualification %in% c(2, seq(4,13), seq(15,23), 25, 26, seq(29,34)), "Others", Father.s.qualification))
+
+# Mother's Occupation
+nonenr <- nonenr %>% mutate(Mother.s.occupation = ifelse(Mother.s.occupation %in% c(1, 2, 7, 9, seq(11,32)), "Others", Mother.s.occupation))
+
+# Father's Occupation
+nonenr <- nonenr %>% mutate(Father.s.occupation = ifelse(Father.s.occupation %in% c(seq(1,3), seq(12,46)), "Others", Father.s.occupation))
+```
+
+
+```{r}
+# Converting transformed data set to Model Matrix again
+dummydrop <- as.data.frame(model.matrix(~ . - 1, nonenr))
+
+summary(dummydrop)
+```
+
+
+Issue 2: we have observed that `model.matrix()` creates a dummy for all N levels of the categorical feature `Marital Status`, while we only need N-1 levels of dummies to avoid the problem of multicollinearity. 
+Our solution: remove a level for these categorical features manually 
+
+```{r}
+# marital status has 6 levels, and we have 6 dummies now
+dummydrop$Marital.status1 <- NULL
+
+str(dummydrop)
+```
+
+
+### Create Normalized Version of Data
+```{r}
+# Randomize the rows in the data (shuffling the rows)
+set.seed(12345)
+randomdrop <- dummydrop[sample(nrow(dummydrop)),]
+
+# Function to normalize a column
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# Normalize everything 
+drop_norm <- as.data.frame(lapply(randomdrop, normalize))
+
+# Check normalized data
+summary(drop_norm)
+```
+
+### Clean Prediction Dataset
+```{r}
+# Feature Engineering: Apply the same transformations on the prediction dataset `enr`
+
+# Marital Status
+enr <- enr %>% mutate(Marital.status = ifelse(Marital.status %in% c(seq(3, 6)), "Others", Marital.status))
+
+# Application Mode
+enr <- enr %>% mutate(Application.mode = ifelse(Application.mode %in% c(seq(2,7), seq(9,11), 13, seq(15,18)), "Others", Application.mode))
+
+# Previous Qualification
+enr <- enr %>% mutate(Previous.qualification = ifelse(Previous.qualification %in% c(seq(2,11), 13, seq(15,17)), "Others", Previous.qualification))
+
+# Nacionality
+enr <- enr %>% mutate(Nacionality = ifelse(Nacionality %in% c(seq(2,8), seq(10,13), seq(15,21)), "Others", Nacionality))
+
+# Mother's Qualification
+enr <- enr %>% mutate(Mother.s.qualification = ifelse(Mother.s.qualification %in% c(2, seq(4,12), seq(14,21), seq(24,29)), "Others", Mother.s.qualification))
+
+# Father's Qualification
+enr <- enr %>% mutate(Father.s.qualification = ifelse(Father.s.qualification %in% c(2, seq(4,13), seq(15,23), 25, 26, seq(29,34)), "Others", Father.s.qualification))
+
+# Mother's Occupation
+enr <- enr %>% mutate(Mother.s.occupation = ifelse(Mother.s.occupation %in% c(1, 2, 7, 9, seq(11,32)), "Others", Mother.s.occupation))
+
+# Father's Occupation
+enr <- enr %>% mutate(Father.s.occupation = ifelse(Father.s.occupation %in% c(seq(1,3), seq(12,46)), "Others", Father.s.occupation))
+```
+
+
+```{r}
+# Create dummies
+dummy_enr <- as.data.frame(model.matrix(~ . -1, enr))
+
+# drop one level in Marital Status to reduce multicollinearity
+dummy_enr$Marital.status1 <- NULL
+summary(dummy_enr)
+```
+
+```{r}
+# Randomize the rows in the data (shuffling the rows)
+set.seed(12345)
+random_enr <- dummy_enr[sample(nrow(dummy_enr)),]
+
+# Normalize everything 
+enroll_norm <- as.data.frame(lapply(random_enr, normalize))
+
+# Check normalized data to make sure every feature is between 0 and 1
+summary(enroll_norm)
+```
+
+
+## Save Cleaned Datasets
+```{r}
+# training set
+write.csv(drop_norm, file = "cleaned_nonenrolls.csv")
+# prediction set
+write.csv(enroll_norm, file = "cleaned_enrolls.csv")
+```
+
