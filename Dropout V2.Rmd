@@ -416,15 +416,27 @@ og_enrolled$Target <- NULL
 
 graduates <- subset(og_enrolled, og_enrolled$Graduated == "1")
 graduates$Graduated <- as.numeric(graduates$Graduated)
-dropouts <- subset(og_enrolled, og_enrolled$Graduated == 0)
+dropouts <- subset(og_enrolled, og_enrolled$Graduated == "0")
 dropouts$Graduated <- as.numeric(dropouts$Graduated)
+
+enrolled$Graduated <- tree_enroll_pred
+graduates_cat <- subset(enrolled, enrolled$Graduated == "1")
+graduates_cat$Graduated <- as.numeric(graduates_cat$Graduated)
+dropouts_cat <- subset(enrolled, enrolled$Graduated == "0")
+dropouts_cat$Graduated <- as.numeric(dropouts_cat$Graduated)
+
 
 # calculate column means for students who are predicted to graduate, and for students who are predicted to drop out
 graduates_mean <- colMeans(graduates)
 dropout_mean <- colMeans(dropouts)
 
+grad_cat_mean <- colMeans(graduates_cat)
+dropout_cat_mean <- colMeans(dropouts_cat)
+
 enrolledmeans <- data.frame(dropout_mean, graduates_mean)
+enrolled_cat_means <- data.frame(grad_cat_mean, dropout_cat_mean)
 enrolledmeans
+enrolled_cat_means
 ```
 
 
@@ -445,6 +457,12 @@ Attribute Usage:
 - 49.00%	Course4
 - 47.31%	Debtor1
 
-## Implications and Recommendations
+## Final Implications and Recommendations
 
-What we can do after finding out which of our predictors are used in our best model, we can look at the averages of all of the columns given just students who were predicted to graduate vs. those who were predicted to dropout. We can see that the average 2nd semester approved credits of those students predicted to dropout is around below 4. The value of those predicted to graduate, however, is above 4. What we recommend to the Institute is an *early intervention program*. If they notice any student whose 2nd semester approved credits are below 4, they reach out to them for academic counseling. 
+What we can do after finding out which of our predictors are used in our best model, we can look at the averages of all of the columns given just students who were predicted to graduate vs. those who were predicted to dropout. We can see that the average 2nd semester approved credits of those students predicted to dropout is around below 4. The value of those predicted to graduate, however, is above 4. What we recommend to the Institute is an *early intervention program*. If they notice any student whose 2nd semester approved credits are below 4, they reach out to them for academic counseling.
+
+Students who were predicted to dropout also have a higher incidence of being in the Basic Education or Agronomy courses of study. We recommend the Institute bolster their support for these departments in general, through either improving counseling specifically or modes of instruction.
+
+In terms of financial characteristics, students who were predicted to dropout had higher rates of being debtors but having their tuition fees up to date.
+
+
