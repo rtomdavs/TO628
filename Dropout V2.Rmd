@@ -1,0 +1,449 @@
+---
+title: "Part 2: College Dropout Modeling and Prediction"
+author: "The Kumar Kids"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: spacelab
+    highlight: zenburn
+date: "2023-04-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+### Background of the Data
+
+In this report, we will be analyzing a data set of students who have either graduated, dropped out, or are still enrolled from a four year undergraduate degree. This data, which is amalgamated from several different sources, includes information on demographic, socioeconomic, macroeconomic, and academic factors for these students. The success of students in higher education is vital to the overall productivity of an economy, as human capital is a huge driver of growth.
+
+### Structure of the Data
+
+This dataset has 35 overall columns, with 1 being our target variable and the others being characteristics of both the students and their environment. We have demographic information like marital status, gender, and age of the students. We also have financial information of the students like whether they are a debtor, have their tuition fees up to date, or are on a scholarship. There are also academic characteristics of these students such as their approved credits, course of study, or whether they have educational special needs. Lastly, there are macroeconomic indicators as well as they are strongly correlated with trends in education.
+
+Our target variable for training the model will be whether or not the students graduated, and we will then use the models we built on the students that are currently enrolled to predict whether they have a high likelihood of dropping out. When we do our analysis, the column "TargetGraduate" indicates whether that student graduated with a value of "1" for graudate and "0" for non graduate.
+
+### Use Case
+
+We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out why they have a much higher dropout rate than the average in the United States. Reports indicate that around 33% of undergraduates do not complete their degree program. Whereas in our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students did not graduate.
+
+Knowing the characteristics of students who are likely to drop out, the academic advisors could further evaluate the situation of these “likely-to-dropout” students case by case, and reach out to offer academic planning/support to reduce their likelihood of dropping out. With the number of enrolled students who would likely drop out, the finance office can estimate the amount of tuition the university would lose per year with this number. The university admission office could also use this number to decide the number of transfer students we can allow next year to fill the gap. 
+
+
+# Building Baseline Model
+
+In our analysis, we will be utilizing the steps laid out to us in TO 628 by Dr. Kumar. The steps are as follows: data loading, data cleaning, splitting training/testing data, followed by predictive model training and model evaluation. After that, we see if we can iterate and improve! The models that we will be using to analyze our college students are:
+
+- Logistic Regression
+- Artificial Neural Network
+- Decision Tree
+- Random Forest Model
+
+## Testing and Training Sets
+
+```{r}
+#Loading in cleaned data set from Part 1
+drop_norm <- read.csv("cleaned_nonenrolls.csv")
+
+#Setting seed for ease of replication
+set.seed(12345)
+trainrows <- sample(nrow(drop_norm), 0.8*nrow(drop_norm))
+
+#Training and testing sets with full columns
+droptrain <- drop_norm[trainrows, ]
+droptest <- drop_norm[-trainrows, ]
+
+#Sets without Y variable
+knn_train <- drop_norm[trainrows, -match("TargetGraduate", names(drop_norm))]
+knn_test <- drop_norm[-trainrows, -match("TargetGraduate", names(drop_norm))]
+
+#Sets with just Y variable
+train_labels <- drop_norm[trainrows, "TargetGraduate"]
+test_labels <- drop_norm[-trainrows, "TargetGraduate"]
+```
+
+The target variable `TargetGraduate` is a dummy variable with two values: 0 and 1. 
+
+- 0: this student has dropped out from the university
+- 1: this student successfully graduated from the university
+
+
+## Helper Functions
+These two functions will aid the model evaluation step in later analysis. 
+```{r}
+get_sensitivity <- function(cm) { # a function that returns sensitivity from confusion matrix 
+  tp <- cm$table[2, 2]
+  tn <- cm$table[1, 1]
+  fp <- cm$table[2, 1]
+  fn <- cm$table[1, 2]
+  sens <- tp / (tp + fn)
+  return(sens)
+}
+
+get_specificity <- function(cm) { # a function that returns specificity from confusion matrix
+  tp <- cm$table[2, 2]
+  tn <- cm$table[1, 1]
+  fp <- cm$table[2, 1]
+  fn <- cm$table[1, 2]
+  spec <- tn / (tn + fp)
+  return(spec)
+}
+```
+
+
+## Logistic Model Training
+```{r}
+logmod <- glm(TargetGraduate ~., data = droptrain, family = "binomial")
+```
+
+## Logistic Model Evaluation
+```{r, warning=FALSE}
+library(caret)
+
+log_pred <- predict(logmod, droptest)
+pblog <- ifelse(log_pred >= 0.5, 1, 0)
+cm <- confusionMatrix(as.factor(pblog), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+log_kappa <- cm$overall['Kappa']
+log_accuracy <- cm$overall['Accuracy']
+log_spec <- get_specificity(cm)
+```
+
+Logistic model performance
+
+- Kappa: `r log_kappa`
+- Accuracy: `r log_accuracy`
+
+
+## ANN Model Training
+
+We are building a Neural Network with 1 hidden layer.
+```{r, cache= TRUE}
+library(neuralnet)
+model_ann <- neuralnet(TargetGraduate ~ ., data = droptrain, hidden = 1)
+```
+
+## ANN Model Evaluation
+```{r, cache= TRUE}
+ann_pred <- predict(model_ann, droptest)
+predbin_ann <- ifelse(ann_pred >= 0.5, 1, 0)
+cm <- confusionMatrix(as.factor(predbin_ann), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+ann_accuracy <- cm$overall['Accuracy']
+ann_kappa <- cm$overall['Kappa']
+ann_spec <- get_specificity(cm)
+```
+
+2-Layer Neural Network model performance
+
+- Kappa: `r nn_kappa`
+- Accuracy: `r nn_accuracy`
+
+
+## Decision Tree Model Training
+```{r, cache=TRUE}
+library(C50)
+
+droptree <- C5.0(as.factor(TargetGraduate) ~., data=droptrain)
+```
+
+## Decision Tree Model Evaluation
+```{r, cache=TRUE}
+tree_pred <- predict(droptree, droptest)
+cm <- confusionMatrix(as.factor(tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+dt_accuracy <- cm$overall['Accuracy']
+dt_kappa <- cm$overall['Kappa']
+dt_spec <- get_specificity(cm)
+```
+
+Decision Tree model performance
+
+- Kappa: `r dt_kappa`
+- Accuracy: `r dt_accuracy`
+
+
+## Random Forest Model Training
+```{r, cache=TRUE}
+library(randomForest)
+
+forestmodel <- randomForest(as.factor(TargetGraduate) ~., data = droptrain)
+```
+
+## Random Forest Model Evaluation
+```{r, cache=TRUE}
+forest_pred <- predict(forestmodel, droptest)
+
+cm <- confusionMatrix(as.factor(forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+rf_accuracy <- cm$overall['Accuracy']
+rf_kappa <- cm$overall['Kappa']
+rf_spec <- get_specificity(cm)
+```
+
+Random Forest model performance
+
+- Kappa: `r rf_kappa`
+- Accuracy: `r rf_accuracy`
+
+
+## Initial Model Performance Review 
+So far, our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%0.2f", rf_kappa)`, and the highest accuracy at `r sprintf("%0.2f%%", rf_accuracy * 100)`. 
+
+It is worthy to note that the accuracy score might be misleading at times. To identify the most importance statistic metric, we need to review the goal of our analysis. For college dropout prediction, we not only want the model to accurately predict who will dropped out and who will not, but also hope the model to lower the likelihood of falsely predicting those who will drop out. 
+
+Our main audience, the University Board, would like to correctly identify those who would be likely to drop out so they could take mitigation measures to prevent such result by offering various academic support to those students. In statistical terms, a low False Positive (students who were predicted to graduate but dropped out in reality, FP in short) in is more meaningful than a high accuracy. So our first priority is to lower FP, and then pursue a high Kappa and accuracy score. Since we do not know the relative cost of reaching out to students and offer academic resources/support, we assume that the university would tolerate a moderate False Negative (students who graduated successfully but were predicted to drop out, FN in short). 
+
+The reasoning above points out to two statistical metrics that we should pay attention to: 
+
+- sensitivity (TP / TP + FN): the percentage of truly graduated students we can predict out of all graduated students in the past
+- specificity (TN / TN + FP): the percentage of truly dropped out students we successfully predict out of all drop-outs in the past
+
+In particular, we would love to prioritize a low FP, so a high specificity is what we should prioritize.
+
+
+# Building Improved Models
+
+## Testing Improved Logistic Model
+
+Improvements to our logistic regression model predictions actually don't even need to be made to the model itself. All we have to do is increase the prediction threshold for whether or not a student will graduate, and the model will predict less students overall graduating. 
+
+```{r}
+#Increasing threshold
+pblog_impr <- ifelse(log_pred >= 0.8, 1, 0)
+cm <- confusionMatrix(as.factor(pblog_impr), as.factor(droptest$Target), positive = "1")
+cm 
+
+log_impr_accuracy <- cm$overall['Accuracy']
+log_impr_kappa <- cm$overall['Kappa']
+log_impr_spec <- get_specificity(cm)
+```
+Improved Logistic Model Performance: 
+
+- Kappa: `r log_impr_accuracy`
+- Accuracy: `r log_impr_kappa`
+- Specificity: `r log_impr_spec`
+
+Although we lose some accuracy (baseline has `r log_accuracy`), we have a specificity score `r log_impr_spec` that is better than `r log_spec` from the Baseline Logistic Model.
+
+
+## Improved ANN Model Evaluation
+
+Much like our Logistic Model, we do not actually have to create a new neural network in order to improve the ability of our model to catch false positives. All we have to do is increase the prediction threshold.
+
+```{r, cache= TRUE}
+predbin_ann_impr <- ifelse(ann_pred >= .9483, 1, 0)
+cm <- confusionMatrix(as.factor(predbin_ann_impr), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+ann_impr_accuracy <- cm$overall['Accuracy']
+ann_impr_kappa <- cm$overall['Kappa']
+ann_impr_spec <- get_specificity(cm)
+```
+
+Improved ANN Model Performance:
+
+- Accuracy: `r ann_impr_accuracy`
+- Kappa: `r ann_impr_kappa`
+- Specificity: `r ann_impr_spec`
+
+Similar to the logistic regression model, we see our specificity improved from `r ann_spec`.
+
+
+## Improved Decision Tree Model Creation
+
+Unliked our Logistic Model or ANN model, we can create a new decision tree that takes into account a *cost matrix*. This matrix will tell the decision tree algorithm that one of our false cases is much more costly than the other. For this, we will assign a value of 3 to our false positives and 1 to our false negatives. 
+
+```{r, cache=TRUE}
+#Creating our Error Cost Matrix
+error_cost = matrix(c(0, 3, 1, 0), nrow = 2)
+error_cost
+
+#Creating our new decision tree factoring in cost matrix
+errortree <- C5.0(as.factor(TargetGraduate) ~., data=droptrain, costs = error_cost)
+```
+
+## Improved Decision Tree Model Evaluation
+```{r, cache=TRUE}
+error_tree_pred <- predict(errortree, droptest)
+cm <- confusionMatrix(as.factor(error_tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+dt_impr_accuracy <- cm$overall['Accuracy']
+dt_impr_kappa <- cm$overall['Kappa']
+dt_impr_spec <- get_specificity(cm)
+```
+
+Improved Decision Tree Model Performance:
+
+- Accuracy: `r dt_impr_accuracy`
+- Kappa: `r dt_impr_kappa`
+- Specificity: `r dt_impr_spec`
+
+With this type of error cost accounting, we can see a rise in specificity from `r dt_spec`
+
+
+## Improved Random Forest Model Creation
+
+We can introduce a similar concept into our random forest model, but adding a "cutoff" parameter to the function. This will allow us to weight each of the target variable possibilities.
+
+```{r, cache=TRUE}
+errorforest <- randomForest(as.factor(TargetGraduate) ~., data = droptrain, cutoff = c(.35, .65))
+```
+
+
+## Improved Random Forest Model Evaluation
+```{r, cache=TRUE}
+error_forest_pred <- predict(errorforest, droptest)
+
+cm <- confusionMatrix(as.factor(error_forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
+
+rf_impr_accuracy <- cm$overall['Accuracy']
+rf_impr_kappa <- cm$overall['Kappa']
+rf_impr_spec <- get_specificity(cm)
+```
+
+Improved Random Forest Model Performance:
+
+- Accuracy: `r rf_impr_accuracy`
+- Kappa: `r rf_impr_kappa`
+- Specificity: `r rf_impr_spec`
+
+The specificity improved from `r rf_spec` even though we compromised a little from accuracy and kappa scores (baseline accuracy is `r rf_accuracy` and baseline kappa is `r rf_kappa`).
+
+
+# Building Stacked Decision Tree Model 
+To improve our prediction model further, we will combine the predictions from all of 4 improved models and create a second layer decision tree model that trains on these predicted data. The hope is that this 2-layer  model will capture the advantages of all 4 models and boost the performance. This approach is called stacking, and the 4 improved models are *weak learners*, whereas the 2nd layer tree model is the *meta model* that combine the virtues of the weak learners and generate superior performance.
+
+## Create New Data Frames with Predictions
+```{r}
+# Adding Prediction Columns for Every Model
+dropstack <- data.frame(droptest$TargetGraduate, log_pred, ann_pred, error_tree_pred, error_tree_pred)
+
+# # Test stacked tree model with tuned model predictions (performs worse)
+# dropstack <- data.frame(droptest$TargetGraduate, log_pred, ann_pred, tree_pred, forest_pred)
+
+# Renaming Columns
+colnames(dropstack)[1] = "Graduated"
+colnames(dropstack)[2] = "LogitPred"
+colnames(dropstack)[3] = "ANNPred"
+colnames(dropstack)[4] = "TreePred"
+colnames(dropstack)[5] = "ForestPred"
+
+summary(dropstack)
+```
+
+## Test and Train for Stacked Data
+```{r}
+set.seed(12345)
+trainrows <- sample(nrow(dropstack), 0.8*nrow(dropstack))
+
+stack_train <- dropstack[trainrows, ]
+stack_test <- dropstack[-trainrows, ]
+```
+
+
+## Decision Tree on Stacked Data
+```{r}
+set.seed(12345)
+stack_tree <- C5.0(as.factor(Graduated) ~., data = stack_train)
+
+plot(stack_tree)
+```
+
+
+## Evaluating Decision Tree on Stacked Data
+
+```{r}
+stack_tree_pred <- predict(stack_tree, stack_test)
+
+cm<- confusionMatrix(as.factor(stack_tree_pred), as.factor(stack_test$Graduated), positive = "1")
+cm
+
+stack_kappa <- cm$overall['Kappa']
+stack_accuracy <- cm$overall['Accuracy']
+stack_spec <- get_specificity(cm)
+```
+
+Stacked Model Performance
+
+- Kappa: `r stack_kappa`
+- Accuracy: `r stack_accuracy`
+- Specificity: `r stack_spec`
+
+Note: You might have noticed that the numbers in the confusion matrix is significantly smaller than our baseline models. This is because we are training the stacked tree model on the testing set of students who have graduated/dropped out in the past. Note that stack_train has `r nrow(stack_train)` rows, and stack_test has `r nrow(stack_test)` rows.
+
+Surprisingly, the stacked model is not the best performing model in regards to Specificity, Kappa, Accuracy score! Below is a summary table on statistical metrics we care about: 
+```{r}
+data.frame(
+  model_name = c("Logistic", "ANN", "Decision Tree", "Random Forest", "Improved Logistic", "Improved ANN", "Improved Decision Tree", "Improved Random Forest", "Stacked Tree"),
+  specificity = c(log_spec, ann_spec, dt_spec, rf_spec, log_impr_spec, ann_impr_spec, dt_impr_spec, rf_impr_spec, stack_spec),
+  kappa = c(log_kappa, ann_kappa, dt_kappa, rf_kappa, log_impr_kappa, ann_impr_kappa, dt_impr_kappa, rf_impr_kappa, stack_kappa),
+  accuracy = c(log_accuracy, ann_accuracy, dt_accuracy, rf_accuracy, log_impr_accuracy, ann_impr_accuracy, dt_impr_accuracy, rf_impr_accuracy, stack_accuracy)
+)
+```
+
+Since our primary goal is to lower false positive in the predictive model, we will use the Improved Decision Tree model, which has the highest specificity of `r dt_impr_spec`, to create predictions on currently enrolled students. 
+
+
+# Creating Predictions through Best Performing Model
+```{r}
+#Reading in our Enrolled Students
+enrolled <- read.csv("cleaned_enrolls.csv")
+
+tree_enroll_pred <- predict(errortree, enrolled)
+```
+
+
+## Adding Prediction Column and Subsetting Enrolled Students
+```{r}
+# Add predictions to currently enrolled students
+enrolled$Graduated <- tree_enroll_pred
+
+graduates <- subset(enrolled, enrolled$Graduated == "1")
+graduates$Graduated <- as.numeric(graduates$Graduated)
+dropouts <- subset(enrolled, enrolled$Graduated == 0)
+dropouts$Graduated <- as.numeric(dropouts$Graduated)
+
+# calculate column means for students who are predicted to graduate, and for students who are predicted to drop out
+graduates_mean <- colMeans(graduates)
+dropout_mean <- colMeans(dropouts)
+
+enrolledmeans <- data.frame(dropmeans, gradmeans)
+enrolledmeans
+```
+
+
+## Characteristics of Predicted Dropouts
+So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%.4f", rf_impr_kappa)`, and the highest accuracy at `r sprintf("%.2f%%", rf_impr_accuracy)`. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
+
+Attribute Usage:
+
+- 100.00%	Curricular.units.2nd.sem..approved.
+- 72.73%	Tuition.fees.up.to.date1
+- 58.47%	Curricular.units.2nd.sem..credited.
+- 56.23%	Debtor1
+- 32.99%	Course2
+
+
+## Analysis of Our Current Predictions for Enrolled Students
+
+When we apply our models to the enrolled students, we can see that they all slightly overpredict the actual incidence of graduation.
+
+Our models predict the following graduation rates:
+- Logistic Model = 64%
+- ANN Model = 72%
+- Decision Tree = 71%
+- Random Forest = 75%.
+
+Whereas the actual rate of graduation is around 61%. Since we will be missing some of the actual students who will be dropping out, let's see if we can improve some of our models abilities to catch those students.
+
