@@ -192,8 +192,6 @@ Attribute Usage:
 - 32.99%	Course2
 
 
-
-
 # Combining Models for a Stacked Decision Tree
 
 ## Making New Data Frames with Predictions
@@ -220,7 +218,7 @@ stack_train <- dropstack[trainrows, ]
 stack_test <- dropstack[-trainrows, ]
 ```
 
-## Decision Tree on Telestack
+## Decision Tree on Stacked Data
 ```{r}
 library(C50)
 stack_tree <- C5.0(as.factor(Graduated) ~., data = stack_train)
@@ -228,12 +226,21 @@ stack_tree <- C5.0(as.factor(Graduated) ~., data = stack_train)
 plot(stack_tree)
 ```
 
-## Evaluating Decision Tree on Telestack
+## Evaluating Decision Tree on Stacked Data
 ```{r}
 stack_tree_pred <- predict(stack_tree, stack_test)
 
-confusionMatrix(as.factor(stack_tree_pred), as.factor(stack_test$Graduated), positive = "1")
+cm<- confusionMatrix(as.factor(stack_tree_pred), as.factor(stack_test$Graduated), positive = "1")
+cm
+
+stacked_kappa <- cm$overall['Kappa']
+stacked_accuracy <- cm$overall['Accuracy']
 ```
+
+Stacked Model Performance
+
+- Kappa: `r stacked_kappa`
+- Accuracy: `r stacked_accuracy`
 
 
 # Using our Models to Predict Enrolled Students
@@ -255,18 +262,18 @@ pb_ann_enr <- ifelse(ann_enr_pred >= 0.6, 1, 0)
 tree_enr_pred <- predict(droptree, enrolled)
 
 #Predicting on our enrolled students using random forest
-library(randomForest)
 forest_enr_pred <- predict(forestmodel, enrolled)
 ```
 
 ## Adding predictions to dataframe
 ```{r}
 enrolled_preds <- data.frame(pbenr, pb_ann_enr, tree_enr_pred, forest_enr_pred)
+
 enrolled_preds$tree_enr_pred <- as.numeric(enrolled_preds$tree_enr_pred)
 enrolled_preds$tree_enr_pred <- ifelse(enrolled_preds$tree_enr_pred == 2, 1, 0)
+
 enrolled_preds$forest_enr_pred <- as.numeric(enrolled_preds$forest_enr_pred)
 enrolled_preds$forest_enr_pred <- ifelse(enrolled_preds$forest_enr_pred == 2, 1, 0)
-
 
 summary(enrolled_preds)
 ```
