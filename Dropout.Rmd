@@ -37,6 +37,7 @@ Knowing the characteristics of students who are likely to drop out, the academic
 # Initial Model Creation
 
 ## Testing and Training Sets
+
 ```{r}
 #Loading in CSV
 drop_norm <- read.csv("cleaned_nonenrolls.csv")
@@ -58,6 +59,11 @@ train_labels <- drop_norm[trainrows, "TargetGraduate"]
 test_labels <- drop_norm[-trainrows, "TargetGraduate"]
 ```
 
+The target variable `TargetGraduate` is a dummy variable with two values: 0 and 1. 
+
+- 0: this student has dropped out from the university
+- 1: this student successfully graduated from the university
+
 
 ## Building Logistic Model
 ```{r}
@@ -70,7 +76,7 @@ library(caret)
 
 Logpred <- predict(logmod, droptest)
 pblog <- ifelse(Logpred >= 0.5, 1, 0)
-cm <- confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
+cm <- confusionMatrix(as.factor(pblog), as.factor(droptest$TargetGraduate), positive = "1")
 cm
 
 log_kappa <- cm$overall['Kappa']
@@ -300,15 +306,21 @@ Improvements to our logistic regression model predictions actually don't even ne
 ```{r}
 #Increasing Threshold
 pblog_impr <- ifelse(Logpred >= 1.6, 1, 0)
-confusionMatrix(as.factor(pblog_impr), as.factor(droptest$Target), positive = "1")
+cm <- confusionMatrix(as.factor(pblog_impr), as.factor(droptest$Target), positive = "1")
+cm 
 
-#Accuracy of 84.44%
-#Kappa of 0.686
+log_impr_accuracy <- cm$overall['Accuracy']
+log_impr_kappa <- cm$overall['Kappa']
 ```
+Improved Logistic Model Performance: 
+
+- Kappa: `r log_impr_accuracy`
+- Accuracy: `r log_impr_kappa`
+
 
 ## Improved KNN Model Creation
 
-For our KNN Model, what we are able to do to improve it is to lower our number of nearest neighbors. However, our model only gets to around 75% accuracy even with the lowest K. Not only that, but it is way overpredicting the number of students who will graduate, and missing many of the ones who will drop out. This might mean that is it not entirely suitable for our predictions
+For our KNN Model, what we are able to do to improve it is to lower our number of nearest neighbors. However, our model only gets to around 75% accuracy even with the lowest K. Not only that, but it is significantly overpredicting the number of students who will graduate, and missing many of the ones who will drop out. We conclude that KNN is not suitable for our predictions.
 
 ```{r, cache=TRUE}
 library(class)
@@ -316,6 +328,7 @@ library(class)
 set.seed(12345)
 KNNmodel2 <- knn(knn_train, knn_test, train_labels, k = 1)
 ```
+
 
 ## Improved KNN Model Testing
 ```{r, cache=TRUE}
@@ -328,16 +341,23 @@ confusionMatrix(as.factor(KNNmodel2), as.factor(test_labels), positive = "1")
 
 ## Improved ANN Model Testing
 
-Much like our Logistic Model, we do not actually have to create a new neural network in order to improve the ability of our model to catch false positives. All we have to do is increase the prediction threshold. Similarly to the logistic regression model, we see our false graduates decrease from around 42 to 33.
+Much like our Logistic Model, we do not actually have to create a new neural network in order to improve the ability of our model to catch false positives. All we have to do is increase the prediction threshold. Similar to the logistic regression model, we see our false positive decreases from around 41 to 34.
 
 ```{r, cache= TRUE}
 library (caret)
 predbin_ann_impr <- ifelse(ann_pred >= .9483, 1, 0)
-confusionMatrix(as.factor(predbin_ann_impr), as.factor(droptest$TargetGraduate), positive = "1")
+cm <- confusionMatrix(as.factor(predbin_ann_impr), as.factor(droptest$TargetGraduate), positive = "1")
+cm
 
-#Accuracy of 87.05%
-#Kappa of 0.7309
+ann_impr_accuracy <- cm$overall['Accuracy']
+ann_impr_kappa <- cm$overall['Kappa']
 ```
+
+Improved ANN Model Performance:
+
+- Accuracy: `r ann_impr_accuracy`
+- Kappa: `r ann_impr_kappa`
+
 
 ## Improved Decision Tree Model Creation
 
@@ -357,11 +377,18 @@ errortree <- C5.0(as.factor(TargetGraduate) ~., data=droptrain, costs = error_co
 ## Improved Decision Tree Model Testing
 ```{r, cache=TRUE}
 impr_tree_pred <- predict(errortree, droptest)
-confusionMatrix(as.factor(impr_tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm <- confusionMatrix(as.factor(impr_tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
 
-#Accuracy of 81.82%
-#Kappa of 0.7857
+dt_impr_accuracy <- cm$overall['Accuracy']
+dt_impr_kappa <- cm$overall['Kappa']
 ```
+
+Improved Decision Tree Model Performance:
+
+- Accuracy: `r dt_impr_accuracy`
+- Kappa: `r dt_impr_kappa`
+
 
 ## Improved Random Forest Model Creation
 
@@ -378,11 +405,17 @@ errorforest <- randomForest(as.factor(TargetGraduate) ~., data = droptrain, cuto
 ```{r, cache=TRUE}
 error_forest_pred <- predict(errorforest, droptest)
 
-confusionMatrix(as.factor(error_forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm <- confusionMatrix(as.factor(error_forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
 
-#Accuracy of 89.94.%
-#Kappa for this model is 0.7835
+rf_impr_accuracy <- cm$overall['Accuracy']
+rf_impr_kappa <- cm$overall['Kappa']
 ```
+
+Improved Random Forest Model Performance:
+
+- Accuracy: `r rf_impr_accuracy`
+- Kappa: `r rf_impr_kappa`
 
 
 # Using our *Improved* Models to Predict Enrolled Students
@@ -404,7 +437,6 @@ impr_pb_ann_enr <- ifelse(ann_enr_pred >= 0.948348, 1, 0)
 impr_tree_enr_pred <- predict(errortree, new_enrolled)
 
 #Predicting on our enrolled students using random forest
-library(randomForest)
 impr_forest_enr_pred <- predict(errorforest, new_enrolled)
 ```
 
@@ -421,7 +453,6 @@ summary(new_enrolled_preds)
 ```
 
 
-
 ## Adding Prediction Column and Subsetting Enrolled Students
 ```{r}
 enrolled$predictions <- pbenr
@@ -433,12 +464,13 @@ dropmeans <- colMeans(dropouts)
 gradmeans <- colMeans(graduates)
 
 enrolledmeans <- data.frame(dropmeans, gradmeans)
+enrolledmeans
 ```
 
 
 
 ## Characteristics of Predicted Dropouts
-So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at 0.8095, and the highest accuracy at 91.18%. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
+So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%.4f", rf_impr_kappa)`, and the highest accuracy at `r sprintf("%.2f%%", rf_impr_accuracy)`. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
 
 Attribute Usage:
 
@@ -447,3 +479,5 @@ Attribute Usage:
 - 58.47%	Curricular.units.2nd.sem..credited.
 - 56.23%	Debtor1
 - 32.99%	Course2
+
+
