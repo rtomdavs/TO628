@@ -2377,39 +2377,43 @@ enrolled students.</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Reading in our Enrolled Students</span></span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>enrolled <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;cleaned_enrolls.csv&quot;</span>)</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>tree_enroll_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(errortree, enrolled)</span></code></pre></div>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>tree_enroll_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(errortree, enrolled)</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(tree_enroll_pred)</span></code></pre></div>
+<pre><code>##   0   1 
+## 296 498</code></pre>
 <div id="adding-prediction-column-on-original-data-and-subsetting-enrolled-students" class="section level2">
 <h2>Adding Prediction Column On Original Data and Subsetting Enrolled
 Students</h2>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>allstudents <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;dataset.csv&quot;</span>)</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>og_enrolled <span class="ot">&lt;-</span> <span class="fu">subset</span>(allstudents, allstudents<span class="sc">$</span>Target <span class="sc">==</span> <span class="st">&quot;Enrolled&quot;</span>)</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add predictions to currently enrolled students</span></span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>og_enrolled<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> tree_enroll_pred</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>og_enrolled<span class="sc">$</span>Target <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>graduates <span class="ot">&lt;-</span> <span class="fu">subset</span>(og_enrolled, og_enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>graduates<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(graduates<span class="sc">$</span>Graduated)</span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>dropouts <span class="ot">&lt;-</span> <span class="fu">subset</span>(og_enrolled, og_enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;0&quot;</span>)</span>
-<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>dropouts<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(dropouts<span class="sc">$</span>Graduated)</span>
-<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>enrolled<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> tree_enroll_pred</span>
-<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>graduates_cat <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
-<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>graduates_cat<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(graduates_cat<span class="sc">$</span>Graduated)</span>
-<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>dropouts_cat <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;0&quot;</span>)</span>
-<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>dropouts_cat<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(dropouts_cat<span class="sc">$</span>Graduated)</span>
-<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate column means for students who are predicted to graduate, and for students who are predicted to drop out</span></span>
-<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a>graduates_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates)</span>
-<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a>dropout_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts)</span>
-<span id="cb54-23"><a href="#cb54-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>grad_cat_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates_cat)</span>
-<span id="cb54-25"><a href="#cb54-25" aria-hidden="true" tabindex="-1"></a>dropout_cat_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts_cat)</span>
-<span id="cb54-26"><a href="#cb54-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-27"><a href="#cb54-27" aria-hidden="true" tabindex="-1"></a>enrolledmeans <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(dropout_mean, graduates_mean)</span>
-<span id="cb54-28"><a href="#cb54-28" aria-hidden="true" tabindex="-1"></a>enrolled_cat_means <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(grad_cat_mean, dropout_cat_mean)</span>
-<span id="cb54-29"><a href="#cb54-29" aria-hidden="true" tabindex="-1"></a>enrolledmeans</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>allstudents <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;dataset.csv&quot;</span>)</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>og_enrolled <span class="ot">&lt;-</span> <span class="fu">subset</span>(allstudents, allstudents<span class="sc">$</span>Target <span class="sc">==</span> <span class="st">&quot;Enrolled&quot;</span>)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add predictions to currently enrolled students</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>og_enrolled<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> tree_enroll_pred</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>og_enrolled<span class="sc">$</span>Target <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>graduates <span class="ot">&lt;-</span> <span class="fu">subset</span>(og_enrolled, og_enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>graduates<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(graduates<span class="sc">$</span>Graduated)</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>dropouts <span class="ot">&lt;-</span> <span class="fu">subset</span>(og_enrolled, og_enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;0&quot;</span>)</span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>dropouts<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(dropouts<span class="sc">$</span>Graduated)</span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>enrolled<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> tree_enroll_pred</span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>graduates_cat <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a>graduates_cat<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(graduates_cat<span class="sc">$</span>Graduated)</span>
+<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>dropouts_cat <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;0&quot;</span>)</span>
+<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a>dropouts_cat<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(dropouts_cat<span class="sc">$</span>Graduated)</span>
+<span id="cb55-18"><a href="#cb55-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-19"><a href="#cb55-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-20"><a href="#cb55-20" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate column means for students who are predicted to graduate, and for students who are predicted to drop out</span></span>
+<span id="cb55-21"><a href="#cb55-21" aria-hidden="true" tabindex="-1"></a>graduates_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates)</span>
+<span id="cb55-22"><a href="#cb55-22" aria-hidden="true" tabindex="-1"></a>dropout_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts)</span>
+<span id="cb55-23"><a href="#cb55-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-24"><a href="#cb55-24" aria-hidden="true" tabindex="-1"></a>grad_cat_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates_cat)</span>
+<span id="cb55-25"><a href="#cb55-25" aria-hidden="true" tabindex="-1"></a>dropout_cat_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts_cat)</span>
+<span id="cb55-26"><a href="#cb55-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-27"><a href="#cb55-27" aria-hidden="true" tabindex="-1"></a>enrolledmeans <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(dropout_mean, graduates_mean)</span>
+<span id="cb55-28"><a href="#cb55-28" aria-hidden="true" tabindex="-1"></a>enrolled_cat_means <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(grad_cat_mean, dropout_cat_mean)</span>
+<span id="cb55-29"><a href="#cb55-29" aria-hidden="true" tabindex="-1"></a>enrolledmeans</span></code></pre></div>
 <pre><code>##                                                dropout_mean graduates_mean
 ## Marital.status                                   1.10472973     1.18072289
 ## Application.mode                                 6.87162162     7.45582329
@@ -2446,7 +2450,7 @@ Students</h2>
 ## Inflation.rate                                   1.22770270     1.20220884
 ## GDP                                              0.05283784     0.05355422
 ## Graduated                                        1.00000000     2.00000000</code></pre>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>enrolled_cat_means</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>enrolled_cat_means</span></code></pre></div>
 <pre><code>##                                                grad_cat_mean dropout_cat_mean
 ## Marital.status2                                  0.070281124      0.057432432
 ## Marital.statusOthers                             0.032128514      0.020270270
@@ -2558,23 +2562,64 @@ is a debtor and whether their student loans are up to date.</p>
 </div>
 <div id="final-implications-and-recommendations" class="section level2">
 <h2>Final Implications and Recommendations</h2>
-<p>What we can do after finding out which of our predictors are used in
-our best model, we can look at the averages of all of the columns given
-just students who were predicted to graduate vs. those who were
-predicted to dropout. We can see that the average 2nd semester approved
-credits of those students predicted to dropout is around below 4. The
-value of those predicted to graduate, however, is above 4. What we
-recommend to the Institute is an <em>early intervention program</em>. If
-they notice any student whose 2nd semester approved credits are below 4,
-they reach out to them for academic counseling.</p>
-<p>Students who were predicted to dropout also have a higher incidence
-of being in the Basic Education or Agronomy courses of study. We
-recommend the Institute bolster their support for these departments in
-general, through either improving counseling specifically or modes of
+<p>We identify the number of curricular units approved in the second
+semester as well as timely payment of tuition fees to be the key drivers
+of the student dropout rate. These results are unsurprising that
+financial pressures such as tuition payment and pre-existing debt would
+cause students to ultimately dropout. Furthermore, the correlation
+between curricular units approved and credited in the second semester
+suggests student inability to properly craft feasible schedules
+significantly hampers their ability to graduate.</p>
+<p>Firstly, we recommend addressing the financial issue through a number
+of means. Housing occupies a substantial portion of any student’s
+budget, and providing affordable on or near-campus alternatives will
+assist in reducing this expense. Additionally, we also endorse a form of
+rolling financial in the form of scholarships or work-study
+opportunities that are available throughout students’ expected four-year
+stay at the university. This will mitigate front loading financial aid
+to incoming students in their first year and allow for a more dynamic
+allocation of resources as needed. Each of these suggestions require a
+targeted approach that pinpoints those most in financial need. Hence, a
+vetting process of analyzing student income and wealth is necessary.
+Particularly, in the modern era, what composes “income” and “wealth” is
+constantly shifting; therefore, careful consideration of factors such as
+realized and unrealized income must be taken into consideration to
+reduce the risk of providing aid to those not realistically qualified as
+financially distressed.</p>
+<p>Secondly, student curricular unit management concerns can be
+mitigated by softly introducing students to the collegiate curricular
+system prior to their arrival. This can take shape in a credit
+recognition program for high school students who have attended courses
+at local universities. In addition, we recommend a required freshman
+program or low-stakes course in which students are required to craft
+projected full four-year schedules that project their expected progress.
+As such, students will possess a framework to compare their expected and
+actual progress and adjust as necessary. We also recommend to the
+Institute an <em>early intervention program</em>. If they notice any
+student whose 2nd semester approved credits are below 4, they reach out
+to them for academic counseling. We can see that the average 2nd
+semester approved credits of those students predicted to dropout is
+around below 4. The value of those predicted to graduate, however, is
+above 4. Students who were predicted to dropout also have a higher
+incidence of being in the Basic Education or Agronomy courses of study.
+We recommend the Institute bolster their support for these departments
+in general, through either improving counseling specifically or modes of
 instruction.</p>
-<p>In terms of financial characteristics, students who were predicted to
-dropout had higher rates of being debtors but having their tuition fees
-up to date. This might seem paradoxical, but we believe that</p>
+<p>Finally, the school can look more generally into the average of these
+characteristics of these students. They can create two profiles, and if
+they notice that a student is becoming increasingly like their predicted
+dropout student, they can step in to offer them assistance</p>
+<p>These recommendations provide a preliminary round of remedies to
+deeply systemic issues. Not only to we advocate implementing these
+measures, we endorse constant and consistent monitoring of their effects
+to more accurately target students with the highest probably to drop out
+yet be retained. This will allow for more effective resource allocation
+in optimizing student retention among and providing the admissions
+office with the necessary quantitative data to initiate the student
+transfer process. As such, this strategy furthers the Polytechnic
+Institute of Portalegre ability to achieve its goals of maximizing human
+capital, and providing its domestic economy with a more capable labor
+force.</p>
 </div>
 </div>
 
