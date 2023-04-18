@@ -228,12 +228,12 @@ str(dummy_enr)
 
 Normalize all numerical features
 ```{r}
-# Randomize the rows in the data (shuffling the rows)
-set.seed(12345)
-random_enr <- dummy_enr[sample(nrow(dummy_enr)),]
+# # Randomize the rows in the data (shuffling the rows)
+# set.seed(12345)
+# random_enr <- dummy_enr[sample(nrow(dummy_enr)),]
 
 # Normalize everything 
-enroll_norm <- as.data.frame(lapply(random_enr, normalize))
+enroll_norm <- as.data.frame(lapply(dummy_enr, normalize))
 
 # Check normalized data to make sure every feature is between 0 and 1
 summary(enroll_norm)
@@ -251,3 +251,5 @@ write.csv(enroll_norm, file = "cleaned_enrolls.csv", row.names = FALSE)
 
 - `cleaned_nonenrolls.csv` will be used for modeling
 - `cleaned_enrolls.csv` will be used to apply the prediction models
+
+
