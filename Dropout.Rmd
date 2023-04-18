@@ -256,27 +256,171 @@ pbenr <- ifelse(log_enr_pred >= 0.5, 1, 0)
 
 #Predicting on our enrolled students using ANN model
 ann_enr_pred <- predict(model_ann, enrolled)
-pb_ann_enr <- ifelse(ann_enr_pred >= 0.6, 1, 0)
+pb_ann_enr <- ifelse(ann_enr_pred >= 0.5, 1, 0)
 
 #Predicting on our enrolled students using decision tree
 tree_enr_pred <- predict(droptree, enrolled)
 
 #Predicting on our enrolled students using random forest
+library(randomForest)
 forest_enr_pred <- predict(forestmodel, enrolled)
 ```
 
 ## Adding predictions to dataframe
 ```{r}
 enrolled_preds <- data.frame(pbenr, pb_ann_enr, tree_enr_pred, forest_enr_pred)
-
 enrolled_preds$tree_enr_pred <- as.numeric(enrolled_preds$tree_enr_pred)
 enrolled_preds$tree_enr_pred <- ifelse(enrolled_preds$tree_enr_pred == 2, 1, 0)
-
 enrolled_preds$forest_enr_pred <- as.numeric(enrolled_preds$forest_enr_pred)
 enrolled_preds$forest_enr_pred <- ifelse(enrolled_preds$forest_enr_pred == 2, 1, 0)
 
+
 summary(enrolled_preds)
 ```
+
+## Analysis of Our Current Predictions for Enrolled Students
+
+When we apply our models to the enrolled students, we can see that they all slightly overpredict the actual incidence of graduation.
+
+Our models predict the following graduation rates:
+- Logistic Model = 64%
+- ANN Model = 72%
+- Decision Tree = 71%
+- Random Forest = 75%.
+
+Whereas the actual rate of graduation is around 61%. Since we will be missing some of the actual students who will be dropping out, let's see if we can improve some of our models abilities to catch those students.
+
+
+# Building Improved Models
+
+## Testing Improved Logistic Model
+
+Improvements to our logistic regression model predictions actually don't even need to be made to the model itself. All we have to do is increase the prediction threshold for whether or not a student will graduate, and the model will predict less students overall graduating. Although we lose some of the accuracy, we have half as many false positive predictions (students that are predicted to graduate but do not). We go from 40 false graduates to 20 false graduates.
+
+```{r}
+#Increasing Threshold
+pblog_impr <- ifelse(Logpred >= 1.6, 1, 0)
+confusionMatrix(as.factor(pblog_impr), as.factor(droptest$Target), positive = "1")
+
+#Accuracy of 84.44%
+#Kappa of 0.686
+```
+
+## Improved KNN Model Creation
+
+For our KNN Model, what we are able to do to improve it is to lower our number of nearest neighbors. However, our model only gets to around 75% accuracy even with the lowest K. Not only that, but it is way overpredicting the number of students who will graduate, and missing many of the ones who will drop out. This might mean that is it not entirely suitable for our predictions
+
+```{r, cache=TRUE}
+library(class)
+
+set.seed(12345)
+KNNmodel2 <- knn(knn_train, knn_test, train_labels, k = 1)
+```
+
+## Improved KNN Model Testing
+```{r, cache=TRUE}
+confusionMatrix(as.factor(KNNmodel2), as.factor(test_labels), positive = "1")
+
+#Accuracy of 75.07%
+#Kappa of 0.4524
+```
+
+
+## Improved ANN Model Testing
+
+Much like our Logistic Model, we do not actually have to create a new neural network in order to improve the ability of our model to catch false positives. All we have to do is increase the prediction threshold. Similarly to the logistic regression model, we see our false graduates decrease from around 42 to 33.
+
+```{r, cache= TRUE}
+library (caret)
+predbin_ann_impr <- ifelse(ann_pred >= .9483, 1, 0)
+confusionMatrix(as.factor(predbin_ann_impr), as.factor(droptest$TargetGraduate), positive = "1")
+
+#Accuracy of 87.05%
+#Kappa of 0.7309
+```
+
+## Improved Decision Tree Model Creation
+
+Unliked our Logistic Model or ANN model, we can create a new decision tree that takes into account a *cost matrix*. This matrix will tell the decision tree algorithm that one of our false cases is much more costly than the other. For this, we will assign a value of 3 to our false positives and 1 to our false negatives. With this type of error cost accounting, we can see a decrease in our false graduation predictions from around 50 to 26.
+
+```{r, cache=TRUE}
+library(C50)
+
+#Creating our Error Cost Matrix
+error_cost = matrix(c(0, 3, 1, 0), nrow = 2)
+error_cost
+
+#Creating our new decision tree factoring in cost matrix
+errortree <- C5.0(as.factor(TargetGraduate) ~., data=droptrain, costs = error_cost)
+```
+
+## Improved Decision Tree Model Testing
+```{r, cache=TRUE}
+impr_tree_pred <- predict(errortree, droptest)
+confusionMatrix(as.factor(impr_tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+
+#Accuracy of 81.82%
+#Kappa of 0.7857
+```
+
+## Improved Random Forest Model Creation
+
+We can introduce a similar concept into our random forest model, but adding a "cutoff" parameter to the function. This will allow us to weight each of the target variable possibilities.
+
+```{r, cache=TRUE}
+library(randomForest)
+
+errorforest <- randomForest(as.factor(TargetGraduate) ~., data = droptrain, cutoff = c(.35, .65))
+```
+
+
+## Improved Random Forest Model Testing
+```{r, cache=TRUE}
+error_forest_pred <- predict(errorforest, droptest)
+
+confusionMatrix(as.factor(error_forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+
+#Accuracy of 89.94.%
+#Kappa for this model is 0.7835
+```
+
+
+# Using our *Improved* Models to Predict Enrolled Students
+
+## Creating Predictions Using Our Models
+```{r}
+#Reading in our Enrolled Students
+new_enrolled <- read.csv("cleaned_enrolls.csv")
+
+#Predicting on our enrolled students using logistic model
+log_enr_pred <- predict(logmod, new_enrolled)
+impr_pbenr <- ifelse(log_enr_pred >= 0.8, 1, 0)
+
+#Predicting on our enrolled students using ANN model
+ann_enr_pred <- predict(model_ann, new_enrolled)
+impr_pb_ann_enr <- ifelse(ann_enr_pred >= 0.948348, 1, 0)
+
+#Predicting on our enrolled students using decision tree
+impr_tree_enr_pred <- predict(errortree, new_enrolled)
+
+#Predicting on our enrolled students using random forest
+library(randomForest)
+impr_forest_enr_pred <- predict(errorforest, new_enrolled)
+```
+
+## Adding predictions to dataframe
+```{r}
+new_enrolled_preds <- data.frame(impr_pbenr, impr_pb_ann_enr, impr_tree_enr_pred, impr_forest_enr_pred)
+new_enrolled_preds$impr_tree_enr_pred <- as.numeric(new_enrolled_preds$impr_tree_enr_pred)
+new_enrolled_preds$impr_tree_enr_pred <- ifelse(new_enrolled_preds$impr_tree_enr_pred == 2, 1, 0)
+new_enrolled_preds$impr_forest_enr_pred <- as.numeric(new_enrolled_preds$impr_forest_enr_pred)
+new_enrolled_preds$impr_forest_enr_pred <- ifelse(new_enrolled_preds$impr_forest_enr_pred == 2, 1, 0)
+
+
+summary(new_enrolled_preds)
+```
+
+
 
 ## Adding Prediction Column and Subsetting Enrolled Students
 ```{r}
@@ -292,14 +436,28 @@ enrolledmeans <- data.frame(dropmeans, gradmeans)
 ```
 
 
-## Analysis of our predictions on enrolled students
+## Adding Prediction Column and Subsetting Enrolled Students
+```{r}
+enrolled$predictions <- pbenr
 
-When we apply our models to the enrolled students, we can see that they all slightly overpredict the actual incidence of graduation.
+dropouts <- subset(enrolled, enrolled$predictions == "1")
+graduates <- subset(enrolled, enrolled$predictions == "0")
 
-Our models predict the following graduation rates:
-- Logistic Model = 64%
-- ANN Model = 72%
-- Decision Tree = 71%
-- Random Forest = 75%.
+dropmeans <- colMeans(dropouts)
+gradmeans <- colMeans(graduates)
 
-Whereas the actual rate of graduation is around 61%. The true utility comes from analyzing what of these predicted enrolled students have in common. For that we can add our predictions and compare the characteristics of those who were predicted to dropout vs. those who were predicted to graduate.
+enrolledmeans <- data.frame(dropmeans, gradmeans)
+```
+
+
+
+## Characteristics of Predicted Dropouts
+So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at 0.8095, and the highest accuracy at 91.18%. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
+
+Attribute Usage:
+
+- 100.00%	Curricular.units.2nd.sem..approved.
+- 72.73%	Tuition.fees.up.to.date1
+- 58.47%	Curricular.units.2nd.sem..credited.
+- 56.23%	Debtor1
+- 32.99%	Course2
