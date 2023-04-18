@@ -142,8 +142,8 @@ ann_spec <- get_specificity(cm)
 
 2-Layer Neural Network model performance
 
-- Kappa: `r nn_kappa`
-- Accuracy: `r nn_accuracy`
+- Kappa: `r ann_kappa`
+- Accuracy: `r ann_accuracy`
 
 
 ## Decision Tree Model Training
@@ -354,6 +354,7 @@ stack_test <- dropstack[-trainrows, ]
 
 ## Decision Tree on Stacked Data
 ```{r}
+library(C50)
 set.seed(12345)
 stack_tree <- C5.0(as.factor(Graduated) ~., data = stack_train)
 
@@ -418,7 +419,7 @@ dropouts$Graduated <- as.numeric(dropouts$Graduated)
 graduates_mean <- colMeans(graduates)
 dropout_mean <- colMeans(dropouts)
 
-enrolledmeans <- data.frame(dropmeans, gradmeans)
+enrolledmeans <- data.frame(dropout_mean, graduates_mean)
 enrolledmeans
 ```
 
