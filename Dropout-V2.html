@@ -2415,40 +2415,40 @@ Students</h2>
 <span id="cb55-28"><a href="#cb55-28" aria-hidden="true" tabindex="-1"></a>enrolled_cat_means <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(grad_cat_mean, dropout_cat_mean)</span>
 <span id="cb55-29"><a href="#cb55-29" aria-hidden="true" tabindex="-1"></a>enrolledmeans</span></code></pre></div>
 <pre><code>##                                                dropout_mean graduates_mean
-## Marital.status                                   1.10472973     1.18072289
-## Application.mode                                 6.87162162     7.45582329
-## Application.order                                1.68243243     1.59236948
-## Course                                           9.57770270     9.82530120
-## Daytime.evening.attendance                       0.91891892     0.89759036
-## Previous.qualification                           2.46283784     2.41767068
-## Nacionality                                      1.20270270     1.37349398
-## Mother.s.qualification                          10.99662162    11.38554217
-## Father.s.qualification                          15.48648649    15.51204819
-## Mother.s.occupation                              7.32432432     8.07831325
-## Father.s.occupation                              7.83108108     9.04417671
-## Displaced                                        0.58108108     0.52409639
-## Educational.special.needs                        0.01351351     0.01405622
-## Debtor                                           0.12837838     0.10441767
-## Tuition.fees.up.to.date                          0.96283784     0.93775100
-## Gender                                           0.39527027     0.38152610
-## Scholarship.holder                               0.19256757     0.14658635
-## Age.at.enrollment                               21.64527027    22.79919679
-## International                                    0.02364865     0.03413655
-## Curricular.units.1st.sem..credited.              0.56756757     0.47188755
-## Curricular.units.1st.sem..enrolled.              6.08445946     5.89357430
-## Curricular.units.1st.sem..evaluations.           9.41554054     9.29718876
-## Curricular.units.1st.sem..approved.              4.42229730     4.25702811
-## Curricular.units.1st.sem..grade.                11.34135048    10.99681634
-## Curricular.units.1st.sem..without.evaluations.   0.14189189     0.19879518
-## Curricular.units.2nd.sem..credited.              0.41891892     0.32329317
-## Curricular.units.2nd.sem..enrolled.              6.05405405     5.86947791
-## Curricular.units.2nd.sem..evaluations.           9.79729730     9.22088353
-## Curricular.units.2nd.sem..approved.              3.95270270     4.12048193
-## Curricular.units.2nd.sem..grade.                11.17878361    11.08085810
-## Curricular.units.2nd.sem..without.evaluations.   0.20945946     0.17469880
-## Unemployment.rate                               11.09425676    11.37851406
-## Inflation.rate                                   1.22770270     1.20220884
-## GDP                                              0.05283784     0.05355422
+## Marital.status                                   1.11824324     1.17269076
+## Application.mode                                 7.91216216     6.83734940
+## Application.order                                1.51013514     1.69477912
+## Course                                           8.71621622    10.33734940
+## Daytime.evening.attendance                       0.91554054     0.89959839
+## Previous.qualification                           2.87500000     2.17269076
+## Nacionality                                      1.38513514     1.26506024
+## Mother.s.qualification                          10.62837838    11.60441767
+## Father.s.qualification                          14.79729730    15.92168675
+## Mother.s.occupation                              7.89527027     7.73895582
+## Father.s.occupation                              8.70608108     8.52409639
+## Displaced                                        0.53378378     0.55220884
+## Educational.special.needs                        0.01013514     0.01606426
+## Debtor                                           0.18918919     0.06827309
+## Tuition.fees.up.to.date                          0.85810811     1.00000000
+## Gender                                           0.55743243     0.28514056
+## Scholarship.holder                               0.08445946     0.21084337
+## Age.at.enrollment                               22.30067568    22.40963855
+## International                                    0.04054054     0.02409639
+## Curricular.units.1st.sem..credited.              0.60135135     0.45180723
+## Curricular.units.1st.sem..enrolled.              5.39864865     6.30120482
+## Curricular.units.1st.sem..evaluations.           8.81418919     9.65461847
+## Curricular.units.1st.sem..approved.              3.21621622     4.97389558
+## Curricular.units.1st.sem..grade.                 9.27753378    12.22350257
+## Curricular.units.1st.sem..without.evaluations.   0.21283784     0.15662651
+## Curricular.units.2nd.sem..credited.              0.41554054     0.32530120
+## Curricular.units.2nd.sem..enrolled.              5.33783784     6.29518072
+## Curricular.units.2nd.sem..evaluations.           9.04391892     9.66867470
+## Curricular.units.2nd.sem..approved.              2.57432432     4.93975904
+## Curricular.units.2nd.sem..grade.                 9.10066012    12.31604796
+## Curricular.units.2nd.sem..without.evaluations.   0.28040541     0.13253012
+## Unemployment.rate                               10.75709459    11.57891566
+## Inflation.rate                                   1.19324324     1.22269076
+## GDP                                              0.28027027    -0.08162651
 ## Graduated                                        1.00000000     2.00000000</code></pre>
 <div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>enrolled_cat_means</span></code></pre></div>
 <pre><code>##                                                grad_cat_mean dropout_cat_mean
@@ -2599,11 +2599,11 @@ Institute an <em>early intervention program</em>. If they notice any
 student whose 2nd semester approved credits are below 4, they reach out
 to them for academic counseling. We can see that the average 2nd
 semester approved credits of those students predicted to dropout is
-around below 4. The value of those predicted to graduate, however, is
-above 4. Students who were predicted to dropout also have a higher
-incidence of being in the Basic Education or Agronomy courses of study.
-We recommend the Institute bolster their support for these departments
-in general, through either improving counseling specifically or modes of
+around 2.5. The value of those predicted to graduate, however, is around
+5. Students who were predicted to dropout also have a higher incidence
+of being in the Basic Education or Agronomy courses of study. We
+recommend the Institute bolster their support for these departments in
+general, through either improving counseling specifically or modes of
 instruction.</p>
 <p>Finally, the school can look more generally into the average of these
 characteristics of these students. They can create two profiles, and if
