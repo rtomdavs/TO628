@@ -463,6 +463,6 @@ What we can do after finding out which of our predictors are used in our best mo
 
 Students who were predicted to dropout also have a higher incidence of being in the Basic Education or Agronomy courses of study. We recommend the Institute bolster their support for these departments in general, through either improving counseling specifically or modes of instruction.
 
-In terms of financial characteristics, students who were predicted to dropout had higher rates of being debtors but having their tuition fees up to date.
+In terms of financial characteristics, students who were predicted to dropout had higher rates of being debtors but having their tuition fees up to date. This might seem paradoxical, but we believe that 
 
 
