@@ -29,7 +29,9 @@ Our target variable for training the model will be whether or not the students g
 
 ### Use Case
 
-We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out why they have a much higher dropout rate than the average in the United States. Reports indicate that around 33% of undergraduates do not complete their degree program. Whereas in our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students did not graduate. Knowing the characteristics of students who are likely to drop out, the academic advisors could further evaluate the situation of these “likely-to-dropout” students case by case and reach out to offer academic planning/support to reduce their likelihood of dropping out. With the number of enrolled students who would likely drop out, the finance office can estimate the amount of tuition the university would lose per year with this number. The university admission office could also use this number to decide the number of transfer students we can allow next year to fill the gap. 
+We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out why they have a much higher dropout rate than the average in the United States. Reports indicate that around 33% of undergraduates do not complete their degree program. Whereas in our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students did not graduate.
+
+Knowing the characteristics of students who are likely to drop out, the academic advisors could further evaluate the situation of these “likely-to-dropout” students case by case, and reach out to offer academic planning/support to reduce their likelihood of dropping out. With the number of enrolled students who would likely drop out, the finance office can estimate the amount of tuition the university would lose per year with this number. The university admission office could also use this number to decide the number of transfer students we can allow next year to fill the gap. 
 
 
 # Initial Model Creation
@@ -63,16 +65,23 @@ logmod <- glm(TargetGraduate ~., data = droptrain, family = "binomial")
 ```
 
 ## Testing Logistic Model
-```{r}
+```{r, warning=FALSE}
 library(caret)
 
 Logpred <- predict(logmod, droptest)
 pblog <- ifelse(Logpred >= 0.5, 1, 0)
-confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
+cm <- confusionMatrix(as.factor(pblog), as.factor(droptest$Target), positive = "1")
+cm
 
-#Accuracy of 87.88%
-#Kappa of 0.7446
+log_kappa <- cm$overall['Kappa']
+log_accuracy <- cm$overall['Accuracy']
 ```
+
+Logistic model performance
+
+- Kappa: `r log_kappa`
+- Accuracy: `r log_accuracy`
+
 
 ## KNN Model Creation
 ```{r, cache=TRUE}
@@ -84,13 +93,21 @@ KNNmodel <- knn(knn_train, knn_test, train_labels, k = 58)
 
 ## KNN Model Testing
 ```{r, cache=TRUE}
-confusionMatrix(as.factor(KNNmodel), as.factor(test_labels), positive = "1")
+cm <- confusionMatrix(as.factor(KNNmodel), as.factor(test_labels), positive = "1")
+cm
 
-#Accuracy of 80.85% (new accuracy 55%?)
-#Kappa of 0.5489 (Negative Kappa?)
+knn_kappa <- cm$overall['Kappa']
+knn_accuracy <- cm$overall['Accuracy']
 ```
 
+KNN model performance
+
+- Kappa: `r knn_kappa`
+- Accuracy: `r knn_accuracy`
+
+
 ## ANN Model Creation
+We are building a Neural Network with 1 hidden layer.
 ```{r, cache= TRUE}
 library(neuralnet)
 model_ann <- neuralnet(TargetGraduate ~ ., data = droptrain, hidden = 1)
@@ -101,11 +118,18 @@ model_ann <- neuralnet(TargetGraduate ~ ., data = droptrain, hidden = 1)
 library (caret)
 ann_pred <- predict(model_ann, droptest)
 predbin_ann <- ifelse(ann_pred >= 0.6, 1, 0)
-confusionMatrix(as.factor(predbin_ann), as.factor(droptest$TargetGraduate), positive = "1")
+cm <- confusionMatrix(as.factor(predbin_ann), as.factor(droptest$TargetGraduate), positive = "1")
+cm
 
-#Accuracy of 89.39%
-#Kappa of 0.7723
+nn_accuracy <- cm$overall['Accuracy']
+nn_kappa <- cm$overall['Kappa']
 ```
+
+2-layer Neural Network model performance
+
+- Kappa: `r nn_kappa`
+- Accuracy: `r nn_accuracy`
+
 
 ## Decision Tree Model Creation
 ```{r, cache=TRUE}
@@ -117,11 +141,17 @@ droptree <- C5.0(as.factor(TargetGraduate) ~., data=droptrain)
 ## Decision Tree Model Testing
 ```{r, cache=TRUE}
 tree_pred <- predict(droptree, droptest)
-confusionMatrix(as.factor(tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm <- confusionMatrix(as.factor(tree_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
 
-#Accuracy of 90.36%
-#Kappa of 0.7899
+dt_accuracy <- cm$overall['Accuracy']
+dt_kappa <- cm$overall['Kappa']
 ```
+
+Decision Tree model performance
+
+- Kappa: `r dt_kappa`
+- Accuracy: `r dt_accuracy`
 
 ## Random Forest Model Creation
 ```{r, cache=TRUE}
@@ -137,14 +167,21 @@ varImpPlot(forestmodel)
 ```{r, cache=TRUE}
 forest_pred <- predict(forestmodel, droptest)
 
-confusionMatrix(as.factor(forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm <- confusionMatrix(as.factor(forest_pred), as.factor(droptest$TargetGraduate), positive = "1")
+cm
 
-#Accuracy of 91.18%
-#Kappa for this model is 0.8095
+rf_accuracy <- cm$overall['Accuracy']
+rf_kappa <- cm$overall['Kappa']
 ```
 
+Random Forest model performance
+
+- Kappa: `r rf_kappa`
+- Accuracy: `r rf_accuracy`
+
+
 ## Individual Initial Model Results
-So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at 0.8095, and the highest accuracy at 91.18%. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
+So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%0.2f", rf_kappa)`, and the highest accuracy at `r sprintf("%0.2f%%", rf_accuracy * 100)`. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
 
 Attribute Usage:
 
