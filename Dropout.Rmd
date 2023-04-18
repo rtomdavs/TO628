@@ -36,6 +36,13 @@ Knowing the characteristics of students who are likely to drop out, the academic
 
 # Initial Model Creation
 
+In our analysis, we will be utilizing the steps laid out to us in TO 628 by Dr. Kumar. These steps include the loading, cleaning, and breaking into training and testing sets of our data. Followed by the creation of prediction models and there testing. After that, we see if we can iterate and improve! The models that we will be using to analyze our college students are:
+- Logistic Regression
+- K Nearest Neighbor
+- Artificial Neural Network
+- Decision Tree
+- Random Forest Model
+
 ## Testing and Training Sets
 
 ```{r}
@@ -123,7 +130,7 @@ model_ann <- neuralnet(TargetGraduate ~ ., data = droptrain, hidden = 1)
 ```{r, cache= TRUE}
 library (caret)
 ann_pred <- predict(model_ann, droptest)
-predbin_ann <- ifelse(ann_pred >= 0.6, 1, 0)
+predbin_ann <- ifelse(ann_pred >= 0.5, 1, 0)
 cm <- confusionMatrix(as.factor(predbin_ann), as.factor(droptest$TargetGraduate), positive = "1")
 cm
 
@@ -164,8 +171,6 @@ Decision Tree model performance
 library(randomForest)
 
 forestmodel <- randomForest(as.factor(TargetGraduate) ~., data = droptrain)
-
-varImpPlot(forestmodel)
 ```
 
 
@@ -187,15 +192,7 @@ Random Forest model performance
 
 
 ## Individual Initial Model Results
-So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%0.2f", rf_kappa)`, and the highest accuracy at `r sprintf("%0.2f%%", rf_accuracy * 100)`. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
-
-Attribute Usage:
-
-- 100.00%	Curricular.units.2nd.sem..approved.
-- 72.73%	Tuition.fees.up.to.date1
-- 58.47%	Curricular.units.2nd.sem..credited.
-- 56.23%	Debtor1
-- 32.99%	Course2
+So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%0.2f", rf_kappa)`, and the highest accuracy at `r sprintf("%0.2f%%", rf_accuracy * 100)`. What we can do next is combine the predictions in all of our models to create a second layer decision tree. The hope is that this second layer decision tree will capture all of the best parts of each of our models.
 
 
 # Combining Models for a Stacked Decision Tree
@@ -248,6 +245,7 @@ Stacked Model Performance
 - Kappa: `r stacked_kappa`
 - Accuracy: `r stacked_accuracy`
 
+From the testing of our decision tree model, we can see that it did indeed have a higher Kappa and Accuracy than *any* of our previous models! We can then create predictions for our enrolled students, and use this decision tree to make a final aggregated decision.
 
 # Using our Models to Predict Enrolled Students
 
