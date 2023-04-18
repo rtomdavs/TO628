@@ -29,7 +29,7 @@ Our target variable for training the model will be whether or not the students g
 
 ### Use Case
 
-We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out why they have a much higher dropout rate than the average in the United States. Reports indicate that around 33% of undergraduates do not complete their degree program. Whereas in our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students did not graduate.
+We will be posing as a consulting group hired on by the board of directors of the Polytechnic Institute Of Portalegre. We were brought on in order to figure out how we can create a lower dropout rate than the average in the United States. Reports indicate that around 40% of undergraduates do not complete their degree program. In our data it appears that, among the combined students that have either dropped out or graduated, around 40% of the students also did not graduate. We want to figure out if we can give the Institute an edge in terms of putting through high quality graduates.
 
 Knowing the characteristics of students who are likely to drop out, the academic advisors could further evaluate the situation of these “likely-to-dropout” students case by case, and reach out to offer academic planning/support to reduce their likelihood of dropping out. With the number of enrolled students who would likely drop out, the finance office can estimate the amount of tuition the university would lose per year with this number. The university admission office could also use this number to decide the number of transfer students we can allow next year to fill the gap. 
 
@@ -196,7 +196,7 @@ Random Forest model performance
 
 
 ## Initial Model Performance Review 
-So far, our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%0.2f", rf_kappa)`, and the highest accuracy at `r sprintf("%0.2f%%", rf_accuracy * 100)`. 
+So far, our most accurate model in predicting college dropouts has been our Decision Tree model. It has the highest Kappa at `r sprintf("%0.2f", dt_kappa)`, and the highest accuracy at `r sprintf("%0.2f%%", dt_accuracy * 100)`. 
 
 It is worthy to note that the accuracy score might be misleading at times. To identify the most importance statistic metric, we need to review the goal of our analysis. For college dropout prediction, we not only want the model to accurately predict who will dropped out and who will not, but also hope the model to lower the likelihood of falsely predicting those who will drop out. 
 
@@ -405,14 +405,18 @@ tree_enroll_pred <- predict(errortree, enrolled)
 ```
 
 
-## Adding Prediction Column and Subsetting Enrolled Students
+## Adding Prediction Column On Original Data and Subsetting Enrolled Students
 ```{r}
-# Add predictions to currently enrolled students
-enrolled$Graduated <- tree_enroll_pred
+allstudents <- read.csv("dataset.csv")
+og_enrolled <- subset(allstudents, allstudents$Target == "Enrolled")
 
-graduates <- subset(enrolled, enrolled$Graduated == "1")
+# Add predictions to currently enrolled students
+og_enrolled$Graduated <- tree_enroll_pred
+og_enrolled$Target <- NULL
+
+graduates <- subset(og_enrolled, og_enrolled$Graduated == "1")
 graduates$Graduated <- as.numeric(graduates$Graduated)
-dropouts <- subset(enrolled, enrolled$Graduated == 0)
+dropouts <- subset(og_enrolled, og_enrolled$Graduated == 0)
 dropouts$Graduated <- as.numeric(dropouts$Graduated)
 
 # calculate column means for students who are predicted to graduate, and for students who are predicted to drop out
@@ -424,27 +428,23 @@ enrolledmeans
 ```
 
 
+# Final Analysis of Predictions
+
 ## Characteristics of Predicted Dropouts
-So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at `r sprintf("%.4f", rf_impr_kappa)`, and the highest accuracy at `r sprintf("%.2f%%", rf_impr_accuracy)`. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
+
+As we ended up using the decision tree model to, one of the best ways we can see what predictors are going into the decision for currently enrolled students is looking at "attribute usage" the tree itself. This shows the percentage of decisions that use a given attribute. From the list below, we can see that the curricular units in the second semester are large predictors. We can also see that students in courses 16 and 4, which translate to Basic Education and Agronomy, are used as attributes around 50% of the time. Father's qualification 24, which translates to "Unknown" is also used around 60% of the time. Finally, two of our last big predictors that are financial in nature are whether or not a student is a debtor and whether their student loans are up to date. 
 
 Attribute Usage:
 
 - 100.00%	Curricular.units.2nd.sem..approved.
-- 72.73%	Tuition.fees.up.to.date1
-- 58.47%	Curricular.units.2nd.sem..credited.
-- 56.23%	Debtor1
-- 32.99%	Course2
+- 67.60%	Tuition.fees.up.to.date1
+- 58.47%	Father.s.qualification24
+- 57.58%	Curricular.units.2nd.sem..grade.
+- 55.65%	Curricular.units.2nd.sem..credited.
+- 53.51%	Course16
+- 49.00%	Course4
+- 47.31%	Debtor1
 
+## Implications and Recommendations
 
-## Analysis of Our Current Predictions for Enrolled Students
-
-When we apply our models to the enrolled students, we can see that they all slightly overpredict the actual incidence of graduation.
-
-Our models predict the following graduation rates:
-- Logistic Model = 64%
-- ANN Model = 72%
-- Decision Tree = 71%
-- Random Forest = 75%.
-
-Whereas the actual rate of graduation is around 61%. Since we will be missing some of the actual students who will be dropping out, let's see if we can improve some of our models abilities to catch those students.
-
+What we can do after finding out which of our predictors are used in our best model, we can look at the averages of all of the columns given just students who were predicted to graduate vs. those who were predicted to dropout. We can see that the average 2nd semester approved credits of those students predicted to dropout is around below 4. The value of those predicted to graduate, however, is above 4. What we recommend to the Institute is an *early intervention program*. If they notice any student whose 2nd semester approved credits are below 4, they reach out to them for academic counseling. 

@@ -1484,20 +1484,13 @@ margin-right: -30px;
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    var j = 0;
-    while (j < rules.length) {
+    for (var j = 0; j < rules.length; j++) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
-        j++;
-        continue;
-      }
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') {
-        j++;
-        continue;
-      }
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -1726,11 +1719,13 @@ of “1” for graudate and “0” for non graduate.</p>
 <h3>Use Case</h3>
 <p>We will be posing as a consulting group hired on by the board of
 directors of the Polytechnic Institute Of Portalegre. We were brought on
-in order to figure out why they have a much higher dropout rate than the
-average in the United States. Reports indicate that around 33% of
-undergraduates do not complete their degree program. Whereas in our data
-it appears that, among the combined students that have either dropped
-out or graduated, around 40% of the students did not graduate.</p>
+in order to figure out how we can create a lower dropout rate than the
+average in the United States. Reports indicate that around 40% of
+undergraduates do not complete their degree program. In our data it
+appears that, among the combined students that have either dropped out
+or graduated, around 40% of the students also did not graduate. We want
+to figure out if we can give the Institute an edge in terms of putting
+through high quality graduates.</p>
 <p>Knowing the characteristics of students who are likely to drop out,
 the academic advisors could further evaluate the situation of these
 “likely-to-dropout” students case by case, and reach out to offer
@@ -2006,8 +2001,8 @@ analysis.</p>
 <div id="initial-model-performance-review" class="section level2">
 <h2>Initial Model Performance Review</h2>
 <p>So far, our most accurate model in predicting college dropouts has
-been our Random Forest model. It has the highest Kappa at 0.78, and the
-highest accuracy at 89.94%.</p>
+been our Decision Tree model. It has the highest Kappa at 0.79, and the
+highest accuracy at 90.08%.</p>
 <p>It is worthy to note that the accuracy score might be misleading at
 times. To identify the most importance statistic metric, we need to
 review the goal of our analysis. For college dropout prediction, we not
@@ -2383,129 +2378,103 @@ enrolled students.</p>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>enrolled <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;cleaned_enrolls.csv&quot;</span>)</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>tree_enroll_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(errortree, enrolled)</span></code></pre></div>
-<div id="adding-prediction-column-and-subsetting-enrolled-students" class="section level2">
-<h2>Adding Prediction Column and Subsetting Enrolled Students</h2>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add predictions to currently enrolled students</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>enrolled<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> tree_enroll_pred</span>
+<div id="adding-prediction-column-on-original-data-and-subsetting-enrolled-students" class="section level2">
+<h2>Adding Prediction Column On Original Data and Subsetting Enrolled
+Students</h2>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>allstudents <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;dataset.csv&quot;</span>)</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>og_enrolled <span class="ot">&lt;-</span> <span class="fu">subset</span>(allstudents, allstudents<span class="sc">$</span>Target <span class="sc">==</span> <span class="st">&quot;Enrolled&quot;</span>)</span>
 <span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>graduates <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>graduates<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(graduates<span class="sc">$</span>Graduated)</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>dropouts <span class="ot">&lt;-</span> <span class="fu">subset</span>(enrolled, enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="dv">0</span>)</span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>dropouts<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(dropouts<span class="sc">$</span>Graduated)</span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate column means for students who are predicted to graduate, and for students who are predicted to drop out</span></span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>graduates_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates)</span>
-<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>dropout_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts)</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add predictions to currently enrolled students</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>og_enrolled<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> tree_enroll_pred</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>og_enrolled<span class="sc">$</span>Target <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>graduates <span class="ot">&lt;-</span> <span class="fu">subset</span>(og_enrolled, og_enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>graduates<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(graduates<span class="sc">$</span>Graduated)</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>dropouts <span class="ot">&lt;-</span> <span class="fu">subset</span>(og_enrolled, og_enrolled<span class="sc">$</span>Graduated <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>dropouts<span class="sc">$</span>Graduated <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(dropouts<span class="sc">$</span>Graduated)</span>
 <span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>enrolledmeans <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(dropout_mean, graduates_mean)</span>
-<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>enrolledmeans</span></code></pre></div>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate column means for students who are predicted to graduate, and for students who are predicted to drop out</span></span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>graduates_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(graduates)</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>dropout_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(dropouts)</span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>enrolledmeans <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(dropout_mean, graduates_mean)</span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>enrolledmeans</span></code></pre></div>
 <pre><code>##                                                dropout_mean graduates_mean
-## Marital.status2                                 0.057432432    0.070281124
-## Marital.statusOthers                            0.020270270    0.032128514
-## Application.mode12                              0.131756757    0.164658635
-## Application.mode14                              0.111486486    0.084337349
-## Application.mode8                               0.195945946    0.202811245
-## Application.modeOthers                          0.226351351    0.144578313
-## Application.order                               0.063766892    0.086847390
-## Course2                                         0.097972973    0.016064257
-## Course3                                         0.016891892    0.032128514
-## Course4                                         0.040540541    0.050200803
-## Course5                                         0.050675676    0.054216867
-## Course6                                         0.081081081    0.102409639
-## Course7                                         0.172297297    0.026104418
-## Course8                                         0.043918919    0.016064257
-## Course9                                         0.158783784    0.122489960
-## Course10                                        0.050675676    0.054216867
-## Course11                                        0.050675676    0.052208835
-## Course12                                        0.033783784    0.180722892
-## Course13                                        0.016891892    0.024096386
-## Course14                                        0.030405405    0.078313253
-## Course15                                        0.037162162    0.046184739
-## Course16                                        0.047297297    0.072289157
-## Course17                                        0.067567568    0.068273092
-## Daytime.evening.attendance1                     0.915540541    0.899598394
-## Previous.qualification12                        0.016891892    0.016064257
-## Previous.qualification14                        0.091216216    0.056224900
-## Previous.qualificationOthers                    0.047297297    0.028112450
-## Nacionality14                                   0.006756757    0.008032129
-## Nacionality9                                    0.003378378    0.000000000
-## NacionalityOthers                               0.030405405    0.016064257
-## Mother.s.qualification13                        0.233108108    0.214859438
-## Mother.s.qualification22                        0.179054054    0.232931727
-## Mother.s.qualification23                        0.108108108    0.118473896
-## Mother.s.qualification3                         0.131756757    0.124497992
-## Mother.s.qualificationOthers                    0.077702703    0.060240964
-## Father.s.qualification14                        0.209459459    0.242971888
-## Father.s.qualification24                        0.006756757    0.002008032
-## Father.s.qualification27                        0.222972973    0.267068273
-## Father.s.qualification28                        0.158783784    0.160642570
-## Father.s.qualification3                         0.084459459    0.074297189
-## Father.s.qualificationOthers                    0.070945946    0.054216867
-## Mother.s.occupation3                            0.114864865    0.088353414
-## Mother.s.occupation4                            0.108108108    0.094377510
-## Mother.s.occupation5                            0.165540541    0.196787149
-## Mother.s.occupation6                            0.138513514    0.106425703
-## Mother.s.occupation8                            0.030405405    0.078313253
-## Mother.s.occupationOthers                       0.121621622    0.096385542
-## Father.s.occupation11                           0.054054054    0.076305221
-## Father.s.occupation4                            0.091216216    0.072289157
-## Father.s.occupation5                            0.097972973    0.090361446
-## Father.s.occupation6                            0.148648649    0.126506024
-## Father.s.occupation7                            0.077702703    0.050200803
-## Father.s.occupation8                            0.094594595    0.166666667
-## Father.s.occupation9                            0.067567568    0.070281124
-## Father.s.occupationOthers                       0.189189189    0.126506024
-## Displaced1                                      0.533783784    0.552208835
-## Educational.special.needs1                      0.010135135    0.016064257
-## Debtor1                                         0.189189189    0.068273092
-## Tuition.fees.up.to.date1                        0.858108108    1.000000000
-## Gender1                                         0.557432432    0.285140562
-## Scholarship.holder1                             0.084459459    0.210843373
-## Age.at.enrollment                               0.143261505    0.146206447
-## International1                                  0.040540541    0.024096386
-## Curricular.units.1st.sem..credited.             0.042953668    0.032271945
-## Curricular.units.1st.sem..enrolled.             0.317567568    0.370659107
-## Curricular.units.1st.sem..evaluations.          0.367257883    0.402275770
-## Curricular.units.1st.sem..approved.             0.214414414    0.331593039
-## Curricular.units.1st.sem..grade.                0.545737281    0.719029563
-## Curricular.units.1st.sem..without.evaluations.  0.026604730    0.019578313
-## Curricular.units.2nd.sem..credited.             0.034628378    0.027108434
-## Curricular.units.2nd.sem..enrolled.             0.313990461    0.370304748
-## Curricular.units.2nd.sem..evaluations.          0.322997104    0.345309811
-## Curricular.units.2nd.sem..approved.             0.214527027    0.411646586
-## Curricular.units.2nd.sem..grade.                0.517082962    0.699775452
-## Curricular.units.2nd.sem..without.evaluations.  0.035050676    0.016566265
-## Unemployment.rate                               0.367104023    0.462664612
-## Inflation.rate                                  0.442942943    0.449486836
-## GDP                                             0.573351423    0.525544715
-## Graduated                                       1.000000000    2.000000000</code></pre>
+## Marital.status                                   1.10472973     1.18072289
+## Application.mode                                 6.87162162     7.45582329
+## Application.order                                1.68243243     1.59236948
+## Course                                           9.57770270     9.82530120
+## Daytime.evening.attendance                       0.91891892     0.89759036
+## Previous.qualification                           2.46283784     2.41767068
+## Nacionality                                      1.20270270     1.37349398
+## Mother.s.qualification                          10.99662162    11.38554217
+## Father.s.qualification                          15.48648649    15.51204819
+## Mother.s.occupation                              7.32432432     8.07831325
+## Father.s.occupation                              7.83108108     9.04417671
+## Displaced                                        0.58108108     0.52409639
+## Educational.special.needs                        0.01351351     0.01405622
+## Debtor                                           0.12837838     0.10441767
+## Tuition.fees.up.to.date                          0.96283784     0.93775100
+## Gender                                           0.39527027     0.38152610
+## Scholarship.holder                               0.19256757     0.14658635
+## Age.at.enrollment                               21.64527027    22.79919679
+## International                                    0.02364865     0.03413655
+## Curricular.units.1st.sem..credited.              0.56756757     0.47188755
+## Curricular.units.1st.sem..enrolled.              6.08445946     5.89357430
+## Curricular.units.1st.sem..evaluations.           9.41554054     9.29718876
+## Curricular.units.1st.sem..approved.              4.42229730     4.25702811
+## Curricular.units.1st.sem..grade.                11.34135048    10.99681634
+## Curricular.units.1st.sem..without.evaluations.   0.14189189     0.19879518
+## Curricular.units.2nd.sem..credited.              0.41891892     0.32329317
+## Curricular.units.2nd.sem..enrolled.              6.05405405     5.86947791
+## Curricular.units.2nd.sem..evaluations.           9.79729730     9.22088353
+## Curricular.units.2nd.sem..approved.              3.95270270     4.12048193
+## Curricular.units.2nd.sem..grade.                11.17878361    11.08085810
+## Curricular.units.2nd.sem..without.evaluations.   0.20945946     0.17469880
+## Unemployment.rate                               11.09425676    11.37851406
+## Inflation.rate                                   1.22770270     1.20220884
+## GDP                                              0.05283784     0.05355422
+## Graduated                                        1.00000000     2.00000000</code></pre>
 </div>
+</div>
+<div id="final-analysis-of-predictions" class="section level1">
+<h1>Final Analysis of Predictions</h1>
 <div id="characteristics-of-predicted-dropouts" class="section level2">
 <h2>Characteristics of Predicted Dropouts</h2>
-<p>So far our most accurate model in predicting college dropouts has
-been our Random Forest model. It has the highest Kappa at 0.7362, and
-the highest accuracy at 0.87%. Though it isn’t the most accurate model,
-we can also use our decision tree to find out which of our students’
-characteristics are the biggest predictors of dropping out.</p>
+<p>As we ended up using the decision tree model to, one of the best ways
+we can see what predictors are going into the decision for currently
+enrolled students is looking at “attribute usage” the tree itself. This
+shows the percentage of decisions that use a given attribute. From the
+list below, we can see that the curricular units in the second semester
+are large predictors. We can also see that students in courses 16 and 4,
+which translate to Basic Education and Agronomy, are used as attributes
+around 50% of the time. Father’s qualification 24, which translates to
+“Unknown” is also used around 60% of the time. Finally, two of our last
+big predictors that are financial in nature are whether or not a student
+is a debtor and whether their student loans are up to date.</p>
 <p>Attribute Usage:</p>
 <ul>
 <li>100.00% Curricular.units.2nd.sem..approved.</li>
-<li>72.73% Tuition.fees.up.to.date1</li>
-<li>58.47% Curricular.units.2nd.sem..credited.</li>
-<li>56.23% Debtor1</li>
-<li>32.99% Course2</li>
+<li>67.60% Tuition.fees.up.to.date1</li>
+<li>58.47% Father.s.qualification24</li>
+<li>57.58% Curricular.units.2nd.sem..grade.</li>
+<li>55.65% Curricular.units.2nd.sem..credited.</li>
+<li>53.51% Course16</li>
+<li>49.00% Course4</li>
+<li>47.31% Debtor1</li>
 </ul>
 </div>
-<div id="analysis-of-our-current-predictions-for-enrolled-students" class="section level2">
-<h2>Analysis of Our Current Predictions for Enrolled Students</h2>
-<p>When we apply our models to the enrolled students, we can see that
-they all slightly overpredict the actual incidence of graduation.</p>
-<p>Our models predict the following graduation rates: - Logistic Model =
-64% - ANN Model = 72% - Decision Tree = 71% - Random Forest = 75%.</p>
-<p>Whereas the actual rate of graduation is around 61%. Since we will be
-missing some of the actual students who will be dropping out, let’s see
-if we can improve some of our models abilities to catch those
-students.</p>
+<div id="implications-and-recommendations" class="section level2">
+<h2>Implications and Recommendations</h2>
+<p>What we can do after finding out which of our predictors are used in
+our best model, we can look at the averages of all of the columns given
+just students who were predicted to graduate vs. those who were
+predicted to dropout. We can see that the average 2nd semester approved
+credits of those students predicted to dropout is around below 4. The
+value of those predicted to graduate, however, is above 4. What we
+recommend to the Institute is an <em>early intervention program</em>. If
+they notice any student whose 2nd semester approved credits are below 4,
+they reach out to them for academic counseling.</p>
 </div>
 </div>
 
