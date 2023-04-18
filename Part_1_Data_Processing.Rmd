@@ -74,7 +74,7 @@ summary(dummydrop_)
 For categorical features with more than 2 levels, some levels might have few rows of data, while others have a lot. If we convert levels with few data to dummies, the dummies would only add noise when training model.
 
 **Our solution**
-For each categorical feature with this problem, we will group the trivial levels to create an aggregated dummy variable called "Others". We define any levels with less than 5% of total values, or top 3 levels with most values (if these is only one levels with more than 5%), as trivial. 
+For each categorical feature with this problem, we will group the trivial levels to create an aggregated dummy variable called "Others". We define any levels with less than 5% of total values, or any levels other than the top 3 levels with most values (if these is only one level with more than 5%).
 
 ```{r, warning=FALSE}
 library(dplyr)
