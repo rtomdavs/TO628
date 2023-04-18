@@ -1,8 +1,13 @@
 ---
-title: "Data Preprocessing"
-author: "Junli Zhou"
+title: "Part 1: College Dropout Data Preprocessing"
+author: "The Kumar Kids"
 date: "2023-04-13"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab
+    highlight: zenburn
 ---
 
 ```{r setup, include=FALSE}
@@ -52,7 +57,7 @@ nonenr$Target <- as.factor(nonenr$Target)
 # Remove Target variable for prediction dataset
 enr$Target <- NULL
 
-summary(nonenr)
+str(nonenr)
 ```
 
 
@@ -65,38 +70,43 @@ summary(dummydrop_)
 ```
 
 
-Issue 1: for categorical features with more than 2 levels, some levels might have few rows of data, while others have a lot. If we convert levels with few data to dummies, the dummies would only add noise when training model.
-Our solution: for each categorical feature with this problem, we will group the trivial levels to create an aggregated dummy variable called "Others". We define any levels with less than 5% of total values, or top 3 levels with most values (if these is only one levels with more than 5%), as trivial. 
+#### Issue 1
+For categorical features with more than 2 levels, some levels might have few rows of data, while others have a lot. If we convert levels with few data to dummies, the dummies would only add noise when training model.
 
-```{r}
+**Our solution**
+For each categorical feature with this problem, we will group the trivial levels to create an aggregated dummy variable called "Others". We define any levels with less than 5% of total values, or top 3 levels with most values (if these is only one levels with more than 5%), as trivial. 
+
+```{r, warning=FALSE}
 library(dplyr)
 
+# for outputs below, "n" stands for count of the corresponding level, "percentage" indicates the percentage that this level takes out of number of rows
+
 # Marital Status
-nonenr %>% count(Marital.status) %>% mutate(n = n/sum(n))
+nonenr %>% count(Marital.status) %>% mutate(percentage = n/sum(n))
 
 # Application Mode
-nonenr %>% count(Application.mode) %>% mutate(n = n/sum(n))
+nonenr %>% count(Application.mode) %>% mutate(percentage = n/sum(n))
 
 # Course
-nonenr %>% count(Course) %>% mutate(n = n/sum(n))
+nonenr %>% count(Course) %>% mutate(percentage = n/sum(n))
 
 # Previous Qualification
-nonenr %>% count(Previous.qualification) %>% mutate(n = n/sum(n))
+nonenr %>% count(Previous.qualification) %>% mutate(percentage = n/sum(n))
 
 # Nacionality
-nonenr %>% count(Nacionality) %>% mutate(n = n/sum(n))
+nonenr %>% count(Nacionality) %>% mutate(percentage = n/sum(n))
 
 # Mother's Qualification
-nonenr %>% count(Mother.s.qualification) %>% mutate(n = n/sum(n))
+nonenr %>% count(Mother.s.qualification) %>% mutate(percentage = n/sum(n))
 
 # Father's Qualification
-nonenr %>% count(Father.s.qualification) %>% mutate(n = n/sum(n))
+nonenr %>% count(Father.s.qualification) %>% mutate(percentage = n/sum(n))
 
 # Mother's Occupation
-nonenr %>% count(Mother.s.occupation) %>% mutate(n = n/sum(n))
+nonenr %>% count(Mother.s.occupation) %>% mutate(percentage = n/sum(n))
 
 # Father's Occupation
-nonenr %>% count(Father.s.occupation) %>% mutate(n = n/sum(n))
+nonenr %>% count(Father.s.occupation) %>% mutate(percentage = n/sum(n))
 ```
 
 | Variable Name          | Levels to Convert             |
@@ -111,7 +121,7 @@ nonenr %>% count(Father.s.occupation) %>% mutate(n = n/sum(n))
 | Mother's Occupation    | 1, 2, 7, 9, 11-32             |
 | Father's Occupation    | 1-3, 12-46                    |
 
-Convert Levels to Others 
+#### Convert Levels to Others 
 ```{r}
 # Marital Status
 nonenr <- nonenr %>% mutate(Marital.status = ifelse(Marital.status %in% c(seq(3, 6)), "Others", Marital.status))
@@ -147,9 +157,11 @@ summary(dummydrop)
 ```
 
 
-Issue 2: we have observed that `model.matrix()` creates a dummy for all N levels of the categorical feature `Marital Status`, while we only need N-1 levels of dummies to avoid the problem of multicollinearity. 
-Our solution: remove a level for these categorical features manually 
+#### Issue 2
+We have observed that `model.matrix()` creates a dummy for all N levels of the categorical feature `Marital Status`, while we only need N-1 levels of dummies to avoid the problem of multicollinearity. 
 
+**Our solution**
+Remove a level for these categorical features manually 
 ```{r}
 # marital status has 6 levels, and we have 6 dummies now
 dummydrop$Marital.status1 <- NULL
@@ -172,14 +184,13 @@ normalize <- function(x) {
 # Normalize everything 
 drop_norm <- as.data.frame(lapply(randomdrop, normalize))
 
-# Check normalized data
-summary(drop_norm)
+# # Check normalized data
+# summary(drop_norm)
 ```
 
 ### Clean Prediction Dataset
+Feature engineering: the same transformations are applied on the prediction dataset `enr`
 ```{r}
-# Feature Engineering: Apply the same transformations on the prediction dataset `enr`
-
 # Marital Status
 enr <- enr %>% mutate(Marital.status = ifelse(Marital.status %in% c(seq(3, 6)), "Others", Marital.status))
 
@@ -205,16 +216,17 @@ enr <- enr %>% mutate(Mother.s.occupation = ifelse(Mother.s.occupation %in% c(1,
 enr <- enr %>% mutate(Father.s.occupation = ifelse(Father.s.occupation %in% c(seq(1,3), seq(12,46)), "Others", Father.s.occupation))
 ```
 
-
+Dummify categorical features
 ```{r}
 # Create dummies
 dummy_enr <- as.data.frame(model.matrix(~ . -1, enr))
 
 # drop one level in Marital Status to reduce multicollinearity
 dummy_enr$Marital.status1 <- NULL
-summary(dummy_enr)
+str(dummy_enr)
 ```
 
+Normalize all numerical features
 ```{r}
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)

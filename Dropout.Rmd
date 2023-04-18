@@ -1,5 +1,5 @@
 ---
-title: "College Dropout Prediction"
+title: "Part 2: College Dropout Modeling and Prediction"
 author: "The Kumar Kids"
 output:
   html_document:
@@ -23,7 +23,7 @@ In this report, we will be analyzing a dataset of students who have either gradu
 
 ### Structure of the Data
 
-This dataset has 31 overall columns, with 1 being our target variable and the others being characteristics of both the students and their environment. We have demographic information like marital status, gender, and age of the students. We also have financial information of the students like whether they are a debtor, have their tuition fees up to date, or are on a scholarship. There are also academic characteristics of these students such as their approved credits, course of study, or whether they have educational special needs. Lastly, there are macroeconomic indicators as well as they are strongly correlated with trends in education.
+This dataset has 35 overall columns, with 1 being our target variable and the others being characteristics of both the students and their environment. We have demographic information like marital status, gender, and age of the students. We also have financial information of the students like whether they are a debtor, have their tuition fees up to date, or are on a scholarship. There are also academic characteristics of these students such as their approved credits, course of study, or whether they have educational special needs. Lastly, there are macroeconomic indicators as well as they are strongly correlated with trends in education.
 
 Our target variable for training the model will be whether or not the students graduated, and we will then use the models we built on the students that are currently enrolled to predict whether they have a high likelihood of dropping out. When we do our analysis, the column "TargetGraduate" indicates whether that student graduated with a value of "1" for graudate and "0" for non graduate.
 
