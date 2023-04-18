@@ -436,20 +436,6 @@ enrolledmeans <- data.frame(dropmeans, gradmeans)
 ```
 
 
-## Adding Prediction Column and Subsetting Enrolled Students
-```{r}
-enrolled$predictions <- pbenr
-
-dropouts <- subset(enrolled, enrolled$predictions == "1")
-graduates <- subset(enrolled, enrolled$predictions == "0")
-
-dropmeans <- colMeans(dropouts)
-gradmeans <- colMeans(graduates)
-
-enrolledmeans <- data.frame(dropmeans, gradmeans)
-```
-
-
 
 ## Characteristics of Predicted Dropouts
 So far our most accurate model in predicting college dropouts has been our Random Forest model. It has the highest Kappa at 0.8095, and the highest accuracy at 91.18%. Though it isn't the most accurate model, we can also use our decision tree to find out which of our students' characteristics are the biggest predictors of dropping out.
